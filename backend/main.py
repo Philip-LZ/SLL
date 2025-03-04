@@ -1,26 +1,16 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
-from typing import List, Optional
 import uvicorn
-import os
-import json
-import requests
-from dotenv import load_dotenv
-from openai import OpenAI
+import time
+from chat_response_processor import ChatResponseProcessor, ChatMessage
+from logging_config import setup_logging
 
-# 加载环境变量
-load_dotenv()
-
-# 获取阿里大模型API配置
-ALI_MODEL_API_KEY = os.getenv("ALI_MODEL_API_KEY")
-
-# 初始化OpenAI客户端
-client = OpenAI(
-    api_key=ALI_MODEL_API_KEY,
-    base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
-)
+# 初始化日志系统
+loggers = setup_logging()
+api_logger = loggers['api']
+chat_logger = loggers['chat']
+error_logger = loggers['error']
 
 app = FastAPI(title="SLL Chat API", version="0.0.1")
 
@@ -33,54 +23,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 定义请求模型
-class ChatMessage(BaseModel):
-    message: str
-    conversation_id: Optional[str] = None
-
-# 定义响应模型
-class ChatResponse(BaseModel):
-    response: str
-    conversation_id: str
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    api_logger.info(
+        f"Method: {request.method} Path: {request.url.path} "
+        f"Status: {response.status_code} Process Time: {process_time:.2f}s"
+    )
+    return response
 
 @app.post("/api/chat")
 async def chat(message: ChatMessage):
     try:
-        # 创建聊天完成请求
-        completion = client.chat.completions.create(
-            model="deepseek-r1",
-            messages=[{"role": "user", "content": message.message}],
-            stream=True
+        chat_logger.info(
+            f"New chat request - Message: {message.message[:100]}... "
+            f"Conversation ID: {message.conversation_id or 'new_conversation'}"
         )
-
-        async def generate_response():
-            reasoning_content = ""
-            answer_content = ""
-            is_answering = False
-
-            for chunk in completion:
-                if not chunk.choices:
-                    if hasattr(chunk, 'usage'):
-                        yield f"data: {json.dumps({'type': 'usage', 'content': chunk.usage.__dict__})}\n\n"
-                else:
-                    delta = chunk.choices[0].delta
-                    if hasattr(delta, 'reasoning_content') and delta.reasoning_content is not None:
-                        reasoning_content += delta.reasoning_content
-                        yield f"data: {json.dumps({'type': 'reasoning', 'content': delta.reasoning_content})}\n\n"
-                    elif hasattr(delta, 'content') and delta.content:
-                        if not is_answering:
-                            is_answering = True
-                            yield f"data: {json.dumps({'type': 'start_answer'})}\n\n"
-                        answer_content += delta.content
-                        yield f"data: {json.dumps({'type': 'answer', 'content': delta.content})}\n\n"
-
-            yield f"data: {json.dumps({'type': 'done', 'conversation_id': message.conversation_id or 'new_conversation'})}\n\n"
-
-        return StreamingResponse(generate_response(), media_type="text/event-stream")
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(status_code=500, detail=f"API调用失败: {str(e)}")
+        return StreamingResponse(
+            ChatResponseProcessor.process_chat(
+                message=message.message,
+                conversation_id=message.conversation_id,
+                messages=message.messages
+            ),
+            media_type="text/event-stream"
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        error_msg = f"Chat error: {str(e)}"
+        error_logger.error(error_msg, exc_info=True)
+        raise
 
 @app.get("/")
 async def read_root():
