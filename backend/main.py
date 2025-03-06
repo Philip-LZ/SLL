@@ -13,7 +13,7 @@ chat_logger = loggers['chat']
 error_logger = loggers['error']
 
 app = FastAPI(title="SLL Chat API", version="0.0.1")
-
+temp = 0
 # 配置CORS
 app.add_middleware(
     CORSMiddleware,

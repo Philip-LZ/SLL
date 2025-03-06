@@ -56,3 +56,6 @@ htmlcov/
 *.local
 
 knowledge_storm
+backend/results
+backend/secrets.toml
+secrets.toml

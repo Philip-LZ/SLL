@@ -69,11 +69,6 @@ class ChatResponseProcessor:
                 })
                 return
 
-            # 准备消息历史
-            if not messages:
-                messages = []
-            messages.append({"role": "user", "content": message})
-
             try:
                 # 创建流式聊天完成请求
                 completion = client.chat.completions.create(

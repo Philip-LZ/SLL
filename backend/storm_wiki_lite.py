@@ -85,7 +85,7 @@ class StormWikiLite:
     def generate_questions(self, topic: str) -> List[str]:
         """Generate relevant questions about the topic"""
         prompt = f"假如你在调研报告领域中是一名专家，我需要你关于{topic}提出{self.config.max_perspectives}个关键问题。"
-        prompt += "这些问题应该能够涵盖不同方面，并且足够简介和具体，以便进行深入研究。"
+        prompt += "这些问题应该能够涵盖不同方面，并且足够简介和具体，以便进行深入研究。将结果以1、2、3···的顺序列出，结果不要包含其他内容。"
 
         response = self.client.chat.completions.create(
             model=self.config.model,
