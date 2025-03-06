@@ -21,6 +21,8 @@ if 'messages' not in st.session_state:
     st.session_state.messages = []
 if 'conversation_id' not in st.session_state:
     st.session_state.conversation_id = None
+if 'is_processing' not in st.session_state:
+    st.session_state.is_processing = False
 
 # 设置后端API地址
 BACKEND_URL = "http://localhost:8000"
@@ -47,6 +49,14 @@ with chat_container:
 
 # 用户输入
 if prompt := st.chat_input("请输入您的问题..."):
+    # 检查是否已经在处理请求
+    if st.session_state.is_processing:
+        st.warning("正在处理上一个请求，请稍候...")
+        st.stop()
+    
+    # 设置处理标志
+    st.session_state.is_processing = True
+    
     # 添加用户消息到界面
     with chat_container:
         with st.chat_message("user"):
@@ -80,6 +90,12 @@ if prompt := st.chat_input("请输入您的问题..."):
             ) as response:
                 if response.status_code == 200:
                     is_thinking = False
+                    # 建立缓存，用于收集完整的响应
+                    reasoning_buffer = []
+                    answer_buffer = []
+                    update_interval = 0.5  # 更新间隔（秒）
+                    last_update = time.time()
+                    
                     for line in response.iter_lines():
                         if line:
                             try:
@@ -92,36 +108,60 @@ if prompt := st.chat_input("请输入您的问题..."):
                                     if data['type'] == 'conversation_id':
                                         st.session_state.conversation_id = data['content']
                                     elif data['type'] == 'reasoning':
-                                        # 在思考容器中显示思考过程
+                                        # 收集思考过程
                                         if not is_thinking:
-                                            reasoning_content = "*思考过程：*\n\n"
+                                            reasoning_buffer.append("*思考过程：*\n\n")
                                             is_thinking = True
-                                        reasoning_content = reasoning_content.rstrip() + data['content']
-                                        reasoning_container.markdown(reasoning_content)
+                                        reasoning_buffer.append(data['content'])
+                                        
+                                        # 定期更新显示
+                                        current_time = time.time()
+                                        if current_time - last_update >= update_interval:
+                                            reasoning_content = ''.join(reasoning_buffer)
+                                            reasoning_container.markdown(reasoning_content)
+                                            last_update = current_time
+                                            
                                     elif data['type'] == 'answer':
-                                        time.sleep(0.5)
-                                        # 确保思考过程完整显示
+                                        # 完整显示思考过程
                                         if is_thinking:
-                                            reasoning_container.markdown(reasoning_content) 
+                                            reasoning_content = ''.join(reasoning_buffer)
+                                            reasoning_container.markdown(reasoning_content)
                                             is_thinking = False
                                         
-                                        # 在答案容器中显示回答内容
-                                        if not answer_content:
-                                            answer_content = "*回答：*\n\n"
-                                        answer_content += data['content']
-                                        answer_container.markdown(answer_content)
+                                        # 收集回答内容
+                                        if not answer_buffer:
+                                            answer_buffer.append("*回答：*\n\n")
+                                        answer_buffer.append(data['content'])
+                                        
+                                        # 定期更新显示
+                                        current_time = time.time()
+                                        if current_time - last_update >= update_interval:
+                                            answer_content = ''.join(answer_buffer)
+                                            answer_container.markdown(answer_content)
+                                            last_update = current_time
                             except Exception as e:
                                 st.error(f"处理响应时出错：{str(e)}")
                                 continue
-            
-            # 更新消息历史，合并思考过程和答案
-            full_response = ""
-            if reasoning_content:
-                full_response += reasoning_content + "\n\n"
-            if answer_content:
-                full_response += answer_content
-            if full_response:
-                st.session_state.messages.append({"role": "assistant", "content": full_response})
+                    
+                    # 确保最终显示完整的响应
+                    if reasoning_buffer:
+                        reasoning_content = ''.join(reasoning_buffer)
+                        reasoning_container.markdown(reasoning_content)
+                    if answer_buffer:
+                        answer_content = ''.join(answer_buffer)
+                        answer_container.markdown(answer_content)
+                    
+                    # 更新消息历史
+                    full_response = ""
+                    if reasoning_buffer:
+                        full_response += ''.join(reasoning_buffer) + "\n\n"
+                    if answer_buffer:
+                        full_response += ''.join(answer_buffer)
+                    if full_response:
+                        st.session_state.messages.append({"role": "assistant", "content": full_response})
     
     except Exception as e:
         st.error(f"连接服务器时出错：{str(e)}")
+    finally:
+        # 重置处理标志
+        st.session_state.is_processing = False

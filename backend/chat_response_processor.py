@@ -89,9 +89,6 @@ class ChatResponseProcessor:
                         "content": conversation_id
                     })
 
-                # 用于存储已处理的内容，防止重复
-                processed_content = ""
-                
                 # 处理流式响应
                 for chunk in completion:
                     if not chunk.choices:
@@ -101,22 +98,16 @@ class ChatResponseProcessor:
                     
                     # 处理思考过程
                     if hasattr(delta, 'reasoning_content') and delta.reasoning_content is not None:
-                        new_content = delta.reasoning_content
-                        if new_content not in processed_content:
-                            processed_content += new_content
-                            yield ChatResponseProcessor.create_sse_message({
-                                "type": "reasoning",
-                                "content": new_content
-                            })
+                        yield ChatResponseProcessor.create_sse_message({
+                            "type": "reasoning",
+                            "content": delta.reasoning_content
+                        })
                     # 处理回答内容
                     elif delta.content:
-                        new_content = delta.content
-                        if new_content not in processed_content:
-                            processed_content += new_content
-                            yield ChatResponseProcessor.create_sse_message({
-                                "type": "answer",
-                                "content": new_content
-                            })
+                        yield ChatResponseProcessor.create_sse_message({
+                            "type": "answer",
+                            "content": delta.content
+                        })
 
             except Exception as e:
                 error_message = str(e)
