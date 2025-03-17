@@ -31,12 +31,11 @@ BACKEND_URL = "http://localhost:8000"
 st.title("SLL Chat 智能对话系统")
 
 # 侧边栏
-with st.sidebar:
-    st.header("对话设置")
-    if st.button("清空对话", key="clear"):
-        st.session_state.messages = []
-        st.session_state.conversation_id = None
-        st.experimental_rerun()
+# with st.sidebar:
+#     st.header("对话设置")
+#     if st.button("清空对话", key="clear"):
+#         st.session_state.messages = []
+#         st.session_state.conversation_id = None
 
 # 主聊天界面
 chat_container = st.container()

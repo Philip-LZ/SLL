@@ -67,7 +67,6 @@ class LitellmModel:
             **kwargs
         )
 
-        print(response)
         response_dict = response.json()
         self.log_usage(response_dict)
         outputs = [
