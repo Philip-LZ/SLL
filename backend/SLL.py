@@ -1,4 +1,4 @@
-"""Simplified version of STORM Wiki pipeline using DeepSeek models and Google search engine.
+"""Simplified version of SLL pipeline using DeepSeek models and Bocha search engine.
 
 This module provides a streamlined implementation focused on:
 1. Conversation simulation
@@ -8,78 +8,69 @@ This module provides a streamlined implementation focused on:
 5. Article polishing
 
 Required environment variables:
-    - DEEPSEEK_API_KEY: DeepSeek API key
-    - GOOGLE_API_KEY: Google Search API key
+    - BOSHA_API_KEY： Bosha Search API key
+    - ALI_MODEL_API_KEY： Aliyun model API key
 """
 
 import os
 import re
 import json
 import logging
+import requests
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 from openai import OpenAI
-from googleapiclient.discovery import build
 
 @dataclass
-class StormWikiConfig:
-    """Configuration for StormWiki system"""
-    output_dir: str = "./results/deepseek"
-    max_conv_turns: int = 3
-    max_perspectives: int = 3
-    search_top_k: int = 3
-    temperature: float = 1.0
-    top_p: float = 0.9
-    model: str = "deepseek-chat"
+class SLLConfig:
+    """Configuration for SLL system"""
+    output_dir: str
+    max_conv_turns: int
+    max_perspectives: int
+    search_top_k: int
+    temperature: float
+    top_p: float
+    model: str
 
-class StormWikiLite:
-    def __init__(self, config: StormWikiConfig):
+class SLL:
+    def __init__(self, config: SLLConfig):
         self.config = config
         self.client = OpenAI(
-            api_key=os.getenv("DEEPSEEK_API_KEY"),
-            base_url="https://api.deepseek.com/v1"
-        )
-        
-        # 配置代理
-        try:
-            from httplib2 import Http, ProxyInfo, socks
-            proxy_info = ProxyInfo(
-                proxy_type=socks.PROXY_TYPE_HTTP,
-                proxy_host="127.0.0.1",
-                proxy_port=7890
-            )
-            http = Http(proxy_info=proxy_info)
-        except ImportError:
-            self.logger.warning("httplib2未安装，无法使用代理")
-            http = None
-            
-        self.google_service = build(
-            "customsearch", "v1",
-            developerKey=os.getenv("GOOGLE_API_KEY"),
-            http=http
+            api_key=os.getenv("ALI_MODEL_API_KEY"),
+            base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
         )
         self.logger = logging.getLogger(__name__)
 
-    def search_google(self, query: str) -> List[Dict[str, str]]:
-        """Execute Google search and return results"""
+    def search_bocha(self, query: str) -> List[Dict[str, str]]:
+        """Execute Bocha search and return results"""
         try:
-            results = []
-            res = self.google_service.cse().list(
-                q=query,
-                cx=os.getenv("GOOGLE_CSE_ID"),
-                num=self.config.search_top_k
-            ).execute()
+            url = "https://api.bochaai.com/v1/web-search"
+            payload = json.dumps({
+                "query": query,
+                "summary": True,
+                "count": self.config.search_top_k,
+                "page": 1
+            })
+            headers = {
+                'Authorization': f'Bearer {os.getenv("BOSHA_API_KEY")}',
+                'Content-Type': 'application/json'
+            }
+            response = requests.post(url, headers=headers, data=payload)
+            res = response.json()
 
-            if 'items' in res:
-                for item in res['items']:
-                    results.append({
-                        'title': item.get('title', ''),
-                        'link': item.get('link', ''),
-                        'snippet': item.get('snippet', '')
-                    })
+            results = []
+            if res.get('code') == 200 and 'data' in res:
+                web_pages = res['data'].get('webPages', {})
+                if 'value' in web_pages:
+                    for item in web_pages['value']:
+                        results.append({
+                            'title': item.get('name', ''),
+                            'link': item.get('url', ''),
+                            'snippet': item.get('summary', '')
+                        })
             return results
         except Exception as e:
-            self.logger.error(f"Google search error: {str(e)}")
+            self.logger.error(f"Bocha search error: {str(e)}")
             return []
 
     def generate_questions(self, topic: str) -> List[str]:
@@ -151,7 +142,7 @@ class StormWikiLite:
             # Research phase
             research_data = []
             for question in questions:
-                search_results = self.search_google(question)
+                search_results = self.search_bocha(question)
                 research_data.extend(search_results)
 
             # Generate outline

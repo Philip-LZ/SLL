@@ -13,7 +13,7 @@ from typing import Optional
 load_dotenv()
 
 # 获取API配置
-DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY")
+DASHSCOPE_API_KEY = os.getenv("ALI_MODEL_API_KEY")
 
 # 定义请求模型
 class ChatMessage(BaseModel):
