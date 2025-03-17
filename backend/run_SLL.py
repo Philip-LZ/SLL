@@ -70,9 +70,9 @@ def main():
         topic_dir = os.path.join(config.output_dir, sanitized_topic)
         os.makedirs(topic_dir, exist_ok=True)
 
-        # 处理主题
-        logger.info(f'开始处理主题: {topic}')
-        result = sll.process_topic(topic)
+        # 生成文章
+        logger.info(f'当前研究主题: {topic}')
+        result = sll.generate_article(topic)
 
         # 保存结果
         for key, content in result.items():

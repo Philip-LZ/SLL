@@ -2,7 +2,7 @@
 
 import json
 from typing import List, Dict, Any
-from ..llm import LitellmModel
+from ..engine import LitellmModel
 
 class OutlineGenerator(LitellmModel):
     """大纲生成器，继承LitellmModel的基础功能"""
@@ -15,5 +15,5 @@ class OutlineGenerator(LitellmModel):
         prompt = f"请根据关于'{topic}'的研究资料，创建一个详细的文章大纲。要求层次分明，结构合理。"
         prompt += f"研究资料内容如下：{context}"
 
-        response = self([{"role": "user", "content": prompt}])
+        response = self(prompt=prompt)
         return response[0].strip()

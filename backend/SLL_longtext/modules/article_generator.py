@@ -2,7 +2,7 @@
 
 import json
 from typing import List, Dict, Any
-from ..llm import LitellmModel
+from ..engine import LitellmModel
 
 class ArticleGenerator(LitellmModel):
     """文章生成器，继承LitellmModel的基础功能"""
@@ -16,5 +16,5 @@ class ArticleGenerator(LitellmModel):
         prompt += f"参考以下研究资料：{context}\n"
         prompt += "要求：\n1. 内容要准确、专业且有深度\n2. 语言表达要流畅自然\n3. 各部分内容要衔接紧密\n4. 适当引用研究资料支持论点"
 
-        response = self([{"role": "user", "content": prompt}], max_tokens=2000)
+        response = self(prompt=prompt)
         return response[0].strip()

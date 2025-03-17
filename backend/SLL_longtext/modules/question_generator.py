@@ -1,7 +1,7 @@
 """问题生成器模块，用于生成研究主题相关的关键问题"""
 
 from typing import List
-from ..llm import LitellmModel
+from ..engine import LitellmModel
 
 class QuestionGenerator(LitellmModel):
     """问题生成器，继承LitellmModel的基础功能"""
@@ -15,7 +15,7 @@ class QuestionGenerator(LitellmModel):
                   f"这些问题应该能够涵盖不同方面，并且足够简介和具体，以便进行深入研究。将结果以1、2、3···的顺序列出，结果不要包含其他内容。")
         
         try:
-            response = self({"role": "user", "content": prompt})
+            response = self(prompt=prompt)
             if not response:
                 raise ValueError("LLM API 返回为空")
             

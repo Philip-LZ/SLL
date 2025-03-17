@@ -7,14 +7,19 @@ from typing import List, Dict, Any, Optional, Literal
 from dataclasses import dataclass
 from pathlib import Path
 
+
 import backoff
 from dsp import ERRORS, backoff_hdlr, giveup_hdlr
 from openai import OpenAI
+from pydantic import BaseModel
 
 from .config import SLLConfig
 from .search import BochaSearch
 from .models import LitellmModel
 from .modules import QuestionGenerator, OutlineGenerator, ArticleGenerator, ArticlePolisher
+
+class ArticleRequest(BaseModel):
+    topic: str
 
 class SLL:
     """SLL系统实现，使用模块化组件"""
@@ -34,8 +39,8 @@ class SLL:
         self.article_generator = ArticleGenerator(**model_kwargs)
         self.article_polisher = ArticlePolisher(**model_kwargs)
 
-    def process_topic(self, topic: str) -> Dict[str, Any]:
-        """处理完整的主题生成流程"""
+    def generate_outline(self, topic: str) -> Dict[str, Any]:
+        """生成文章大纲"""
         try:
             # 生成问题
             questions = self.question_generator.generate(topic)
@@ -49,16 +54,9 @@ class SLL:
             # 生成大纲
             outline = self.outline_generator.generate(topic, research_data)
 
-            # 生成文章
-            article = self.article_generator.generate(topic, outline, research_data)
-
-            # 润色文章
-            polished_article = self.article_polisher.polish(article)
-
-            # 合并所有模块的token使用情况
+            # 获取token使用情况
             token_usage = {}
-            for module in [self.question_generator, self.outline_generator, 
-                         self.article_generator, self.article_polisher]:
+            for module in [self.question_generator, self.outline_generator]:
                 usage = module.get_usage_and_reset()
                 for model, stats in usage.items():
                     if model not in token_usage:
@@ -74,11 +72,42 @@ class SLL:
                 "questions": questions,
                 "research_data": research_data,
                 "outline": outline,
+                "token_usage": token_usage
+            }
+
+        except Exception as e:
+            self.logger.error(f"Error generating outline: {str(e)}")
+            raise
+
+    def generate_article(self, topic: str, outline: str, research_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """根据大纲生成文章"""
+        try:
+            # 生成文章
+            article = self.article_generator.generate(topic, outline, research_data)
+
+            # 润色文章
+            polished_article = self.article_polisher.polish(article)
+
+            # 获取token使用情况
+            token_usage = {}
+            for module in [self.article_generator, self.article_polisher]:
+                usage = module.get_usage_and_reset()
+                for model, stats in usage.items():
+                    if model not in token_usage:
+                        token_usage[model] = {
+                            "prompt_tokens": 0,
+                            "completion_tokens": 0
+                        }
+                    token_usage[model]["prompt_tokens"] += stats["prompt_tokens"]
+                    token_usage[model]["completion_tokens"] += stats["completion_tokens"]
+
+            return {
+                "topic": topic,
                 "article": article,
                 "polished_article": polished_article,
                 "token_usage": token_usage
             }
 
         except Exception as e:
-            self.logger.error(f"Error processing topic: {str(e)}")
+            self.logger.error(f"Error generating article: {str(e)}")
             raise
