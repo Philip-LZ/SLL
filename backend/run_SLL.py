@@ -1,16 +1,15 @@
-"""启动程序，用于运行storm_wiki_lite.py中的知识生成系统。
+"""启动程序，用于运行SLL.py中的知识生成系统。
 
 需要的环境变量：
-    - DEEPSEEK_API_KEY: DeepSeek API密钥
-    - GOOGLE_API_KEY: Google搜索API密钥
-    - GOOGLE_CSE_ID: Google自定义搜索引擎ID
+    - ALI_MODEL_API_KEY： Aliyun model API key
+    - BOSHA_API_KEY： Bosha Search API key
 """
 
 import os
 import logging
 from argparse import ArgumentParser
 from dotenv import load_dotenv
-from storm_wiki_lite import StormWikiConfig, StormWikiLite
+from SLL import SLLConfig, SLL
 
 # 设置日志记录
 logging.basicConfig(
@@ -24,14 +23,14 @@ def main():
     load_dotenv()
 
     # 检查必要的环境变量
-    required_env_vars = ['DEEPSEEK_API_KEY', 'GOOGLE_API_KEY', 'GOOGLE_CSE_ID']
+    required_env_vars = ['ALI_MODEL_API_KEY', 'BOSHA_API_KEY']
     for var in required_env_vars:
         if not os.getenv(var):
             logger.error(f'缺少环境变量: {var}')
             return
 
     # 解析命令行参数
-    parser = ArgumentParser(description='运行StormWiki知识生成系统')
+    parser = ArgumentParser(description='运行SLL知识生成系统')
     parser.add_argument('--output-dir', type=str, default='./results/deepseek',
                       help='输出目录路径')
     parser.add_argument('--max-conv-turns', type=int, default=3,
@@ -44,12 +43,12 @@ def main():
                       help='生成文本的温度参数')
     parser.add_argument('--top-p', type=float, default=0.9,
                       help='生成文本的top-p参数')
-    parser.add_argument('--model', type=str, default='deepseek-chat',
+    parser.add_argument('--model', type=str, default='deepseek-v3',
                       help='使用的DeepSeek模型')
     args = parser.parse_args()
 
     # 创建配置对象
-    config = StormWikiConfig(
+    config = SLLConfig(
         output_dir=args.output_dir,
         max_conv_turns=args.max_conv_turns,
         max_perspectives=args.max_perspectives,
@@ -60,8 +59,8 @@ def main():
     )
 
     try:
-        # 初始化StormWikiLite实例
-        storm = StormWikiLite(config)
+        # 初始化SLL实例
+        sll = SLL(config)
 
         # 获取用户输入的主题
         topic = input('请输入要研究的主题: ')
@@ -73,7 +72,7 @@ def main():
 
         # 处理主题
         logger.info(f'开始处理主题: {topic}')
-        result = storm.process_topic(topic)
+        result = sll.process_topic(topic)
 
         # 保存结果
         for key, content in result.items():
