@@ -17,9 +17,8 @@ args.output_dir/
         storm_gen_article_polished.txt  # Polished final article (if args.do_polish_article is True)
 """
 
-import os
-import re
 import logging
+import os
 from argparse import ArgumentParser
 
 from knowledge_storm import (
@@ -29,16 +28,11 @@ from knowledge_storm import (
 )
 from knowledge_storm.lm import DeepSeekModel
 from knowledge_storm.rm import (
-    YouRM,
     BingSearch,
-    BraveRM,
-    SerperRM,
-    DuckDuckGoSearchRM,
-    TavilySearchRM,
-    SearXNG,
     GoogleSearch
 )
 from knowledge_storm.utils import load_api_key
+
 
 def sanitize_topic(topic):
     """
@@ -113,30 +107,6 @@ def main(args):
                 bing_search_api=os.getenv("BING_SEARCH_API_KEY"),
                 k=engine_args.search_top_k,
             )
-        case "you":
-            rm = YouRM(
-                ydc_api_key=os.getenv("YDC_API_KEY"), 
-                k=engine_args.search_top_k)
-        case "brave":
-            rm = BraveRM(
-                brave_search_api_key=os.getenv("BRAVE_API_KEY"),
-                k=engine_args.search_top_k,
-            )
-        case "duckduckgo":
-            rm = DuckDuckGoSearchRM(
-                k=engine_args.search_top_k, safe_search="On", region="us-en"
-            )
-        case "serper":
-            rm = SerperRM(
-                serper_search_api_key=os.getenv("SERPER_API_KEY"),
-                query_params={"autocorrect": True, "num": 10, "page": 1},
-            )
-        case "tavily":
-            rm = TavilySearchRM(
-                tavily_search_api_key=os.getenv("TAVILY_API_KEY"),
-                k=engine_args.search_top_k,
-                include_raw_content=True,
-            )
         case "google":
             rm = GoogleSearch(
                 google_search_api_key=os.getenv("GOOGLE_API_KEY"),
@@ -182,8 +152,8 @@ if __name__ == "__main__":
         type=int,
         default=3,
         help="Maximum number of threads to use. The information seeking part and the article generation"
-        "part can speed up by using multiple threads. Consider reducing it if keep getting "
-        '"Exceed rate limit" error when calling LM API.',
+             "part can speed up by using multiple threads. Consider reducing it if keep getting "
+             '"Exceed rate limit" error when calling LM API.',
     )
     parser.add_argument(
         "--retriever",
@@ -224,7 +194,7 @@ if __name__ == "__main__":
         "--do-polish-article",
         action="store_true",
         help="If True, polish the article by adding a summarization section and (optionally) removing "
-        "duplicate content.",
+             "duplicate content.",
     )
     # hyperparameters for the pre-writing stage
     parser.add_argument(

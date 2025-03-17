@@ -13,11 +13,10 @@ Required environment variables:
 """
 
 import os
-import re
 import json
 import logging
 import requests
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from dataclasses import dataclass
 from openai import OpenAI
 

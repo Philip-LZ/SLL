@@ -1,7 +1,7 @@
 """启动程序，用于运行SLL.py中的知识生成系统。
 
 需要的环境变量：
-    - ALI_MODEL_API_KEY： Aliyun model API key
+    - DEEPSEEK_API_KEY： deepseek model API key
     - BOSHA_API_KEY： Bosha Search API key
 """
 
@@ -9,7 +9,7 @@ import os
 import logging
 from argparse import ArgumentParser
 from dotenv import load_dotenv
-from SLL import SLLConfig, SLL
+from SLL_longtext import SLLConfig, SLL
 
 # 设置日志记录
 logging.basicConfig(
@@ -23,7 +23,7 @@ def main():
     load_dotenv()
 
     # 检查必要的环境变量
-    required_env_vars = ['ALI_MODEL_API_KEY', 'BOSHA_API_KEY']
+    required_env_vars = ['DEEPSEEK_API_KEY', 'BOSHA_API_KEY']
     for var in required_env_vars:
         if not os.getenv(var):
             logger.error(f'缺少环境变量: {var}')
@@ -43,7 +43,7 @@ def main():
                       help='生成文本的温度参数')
     parser.add_argument('--top-p', type=float, default=0.9,
                       help='生成文本的top-p参数')
-    parser.add_argument('--model', type=str, default='deepseek-v3',
+    parser.add_argument('--model', type=str, default='deepseek/deepseek-chat',
                       help='使用的DeepSeek模型')
     args = parser.parse_args()
 
