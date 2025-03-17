@@ -66,6 +66,7 @@ class LitellmModel:
             cache={"no-cache": not cache, "no-store": not cache},
             **kwargs
         )
+
         print(response)
         response_dict = response.json()
         self.log_usage(response_dict)
