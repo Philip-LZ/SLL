@@ -1,4 +1,5 @@
 name: pgai
+version: '3.8'
 services:
   db:
     image: timescale/timescaledb-ha:pg17
@@ -15,9 +16,25 @@ services:
       PGAI_VECTORIZER_WORKER_DB_URL: postgres://postgres:postgres@db:5432/postgres
       OLLAMA_HOST: http://ollama:11434
     command: [ "--poll-interval", "5s", "--log-level", "DEBUG" ]
+
   ollama:
     image: ollama/ollama
     ports:
       - "11434:11434"
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:ollama
+    container_name: open-webui
+    restart: always
+    ports:
+      - "3000:8080"
+    volumes:
+      - open-webui:/app/backend/data
+    environment:
+      OLLAMA_API_URL: http://ollama:11434  # 连接到 ollama 服务
+    depends_on:
+      - ollama  # 确保 ollama 服务先启动
+
 volumes:
   data:
+  open-webui:
