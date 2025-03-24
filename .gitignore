@@ -44,8 +44,7 @@ build/
 Thumbs.db
 
 # Logs
-logs/
-*.log
+/backend/logs
 
 # Coverage
 .coverage
@@ -57,3 +56,4 @@ htmlcov/
 
 knowledge_storm
 backend/results
+demo_light

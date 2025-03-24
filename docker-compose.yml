@@ -13,7 +13,7 @@ services:
   vectorizer-worker:
     image: timescale/pgai-vectorizer-worker:latest
     environment:
-      PGAI_VECTORIZER_WORKER_DB_URL: postgres://postgres:postgres@db:5432/postgres
+      PGAI_VECTORIZER_WORKER_DB_URL: postgres://postgres:postgres@db:5432/sll_chat
       OLLAMA_HOST: http://ollama:11434
     command: [ "--poll-interval", "5s", "--log-level", "DEBUG" ]
 

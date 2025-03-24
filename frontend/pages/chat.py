@@ -5,37 +5,111 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 import time
+from frontend.utils import show_sidebar
 
 # 加载环境变量
 load_dotenv()
 
 # 设置页面配置
 st.set_page_config(
-    page_title="SLL Chat - 主页",
+    page_title="SLL Chat - 智能对话",
     page_icon="💬",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="auto"
 )
 
-# 初始化会话状态
-if 'messages' not in st.session_state:
-    st.session_state.messages = []
-if 'conversation_id' not in st.session_state:
-    st.session_state.conversation_id = None
-if 'is_processing' not in st.session_state:
-    st.session_state.is_processing = False
-
-# 设置后端API地址
-BACKEND_URL = "http://localhost:8000"
+# 显示侧边栏
+selected = show_sidebar()
 
 # 页面标题
-st.title("SLL Chat 智能对话系统")
+st.title("智能对话")
 
-# 侧边栏
-# with st.sidebar:
-#     st.header("对话设置")
-#     if st.button("清空对话", key="clear"):
-#         st.session_state.messages = []
-#         st.session_state.conversation_id = None
+# 自定义CSS样式
+st.markdown("""
+<style>
+    .chat-message {
+        padding: 1.5rem;
+        border-radius: 1rem;
+        margin-bottom: 1rem;
+        animation: fadeIn 0.5s ease-in-out;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .user-message {
+        background-color: #F0F9FF;
+        margin-left: 2rem;
+    }
+    .assistant-message {
+        background-color: #F0FDF4;
+        margin-right: 2rem;
+    }
+    .chat-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    .chat-input {
+        border-radius: 1rem;
+        border: 2px solid #E5E7EB;
+        padding: 1rem;
+        margin-top: 2rem;
+        transition: all 0.3s ease;
+    }
+    .chat-input:focus {
+        border-color: #2563EB;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .reasoning-container {
+        background-color: #FFF7ED;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        font-style: italic;
+    }
+    .answer-container {
+        background-color: #F0FDF4;
+        padding: 1rem;
+        border-radius: 0.5rem;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# 页面标题
+st.title("💬 SLL Chat 智能对话")
+st.markdown("<p style='color: #6B7280; font-size: 1.1rem;'>与 AI 助手进行自然、流畅的对话</p>", unsafe_allow_html=True)
+
+# 登录模态窗口
+def show_login_modal():
+    with st.container():
+        st.markdown("### 请先登录")
+        email = st.text_input("邮箱", key="login_email")
+        password = st.text_input("密码", type="password", key="login_password")
+        col1, col2 = st.columns([1, 1])
+        
+        with col1:
+            if st.button("登录", key="login_button"):
+                try:
+                    response = requests.post(
+                        f"{BACKEND_URL}/api/auth/login",
+                        json={"email": email, "password": password}
+                    )
+                    if response.status_code == 200:
+                        data = response.json()
+                        st.session_state.is_logged_in = True
+                        st.session_state.user_token = data["token"]
+                        st.success("登录成功！")
+                        st.rerun()
+                    else:
+                        st.error("登录失败：邮箱或密码错误")
+                except Exception as e:
+                    st.error(f"登录失败：{str(e)}")
+        
+        with col2:
+            if st.button("注册", key="register_button"):
+                st.info("请联系管理员获取注册信息")
 
 # 主聊天界面
 chat_container = st.container()
@@ -44,10 +118,18 @@ chat_container = st.container()
 with chat_container:
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
-            st.write(message["content"])
+            st.markdown(f"<div class='chat-message {message['role']}-message'>{message['content']}</div>", unsafe_allow_html=True)
 
 # 用户输入
 if prompt := st.chat_input("请输入您的问题..."):
+    # 检查登录状态
+    if not st.session_state.is_logged_in:
+        st.session_state.return_to = "pages/chat.py"
+        st.switch_page("pages/login.py")
+        st.stop()
+        show_login_modal()
+        st.stop()
+        
     # 检查是否已经在处理请求
     if st.session_state.is_processing:
         st.warning("正在处理上一个请求，请稍候...")
@@ -59,7 +141,7 @@ if prompt := st.chat_input("请输入您的问题..."):
     # 添加用户消息到界面
     with chat_container:
         with st.chat_message("user"):
-            st.write(prompt)
+            st.markdown(f"<div class='chat-message user-message'>{prompt}</div>", unsafe_allow_html=True)
     
     # 添加用户消息到历史记录
     st.session_state.messages.append({"role": "user", "content": prompt})

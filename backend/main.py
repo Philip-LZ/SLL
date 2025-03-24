@@ -13,6 +13,7 @@ from typing import List, Dict, Any
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import os
+from auth import router as auth_router
 
 # 加载环境变量
 load_dotenv()
@@ -24,6 +25,9 @@ chat_logger = loggers['chat']
 error_logger = loggers['error']
 
 app = FastAPI(title="SLL Chat API", version="0.0.1")
+
+# 注册认证路由
+app.include_router(auth_router)
 
 # 配置CORS
 app.add_middleware(
