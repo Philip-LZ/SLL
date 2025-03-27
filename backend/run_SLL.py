@@ -10,6 +10,7 @@ import logging
 from argparse import ArgumentParser
 from dotenv import load_dotenv
 from SLL_longtext import SLLConfig, SLL
+import json
 
 # 设置日志记录
 logging.basicConfig(
@@ -72,13 +73,22 @@ def main():
 
         # 生成文章
         logger.info(f'当前研究主题: {topic}')
-        result = sll.generate_article(topic)
+        # 先生成大纲和获取研究数据
+        outline_result = sll.generate_outline(topic)
+        # 使用获取的大纲和研究数据生成文章
+        result = sll.generate_article(topic, outline_result['outline'], outline_result['research_data'])
+        
+        # 合并结果
+        final_result = {
+            **outline_result,
+            **result
+        }
 
         # 保存结果
-        for key, content in result.items():
+        for key, content in final_result.items():
             file_path = os.path.join(topic_dir, f'{key}.json')
             with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(str(content))
+                json.dump(content, f, ensure_ascii=False, indent=4)
 
         logger.info(f'处理完成，结果已保存到: {topic_dir}')
 

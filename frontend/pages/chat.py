@@ -6,9 +6,13 @@ from dotenv import load_dotenv
 import os
 import time
 from frontend.utils import show_sidebar
+from frontend.session_state import init_session_state
 
 # 加载环境变量
 load_dotenv()
+
+# 初始化会话状态
+init_session_state()
 
 # 设置页面配置
 st.set_page_config(
@@ -17,6 +21,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="auto"
 )
+
+# 设置后端API地址
+BACKEND_URL = "http://localhost:8000"
 
 # 显示侧边栏
 selected = show_sidebar()
@@ -154,6 +161,17 @@ if prompt := st.chat_input("请输入您的问题..."):
             full_response = ""
             reasoning_content = ""
             answer_content = ""
+            # 添加容器样式
+            st.markdown("""
+            <style>
+                .streamlit-expander {
+                    margin: 0.5rem 0;
+                }
+                .stMarkdown {
+                    animation: fadeIn 0.3s ease-out;
+                }
+            </style>
+            """, unsafe_allow_html=True)
             
             # 准备请求数据
             data = {
@@ -199,7 +217,10 @@ if prompt := st.chat_input("请输入您的问题..."):
                                         current_time = time.time()
                                         if current_time - last_update >= update_interval:
                                             reasoning_content = ''.join(reasoning_buffer)
-                                            reasoning_container.markdown(reasoning_content)
+                                            reasoning_container.markdown(
+                                                f"<div class='reasoning-container'>{reasoning_content}</div>",
+                                                unsafe_allow_html=True
+                                            )
                                             last_update = current_time
                                             
                                     elif data['type'] == 'answer':
@@ -218,7 +239,10 @@ if prompt := st.chat_input("请输入您的问题..."):
                                         current_time = time.time()
                                         if current_time - last_update >= update_interval:
                                             answer_content = ''.join(answer_buffer)
-                                            answer_container.markdown(answer_content)
+                                            answer_container.markdown(
+                                                f"<div class='answer-container'>{answer_content}</div>",
+                                                unsafe_allow_html=True
+                                            )
                                             last_update = current_time
                             except Exception as e:
                                 st.error(f"处理响应时出错：{str(e)}")
@@ -227,10 +251,16 @@ if prompt := st.chat_input("请输入您的问题..."):
                     # 确保最终显示完整的响应
                     if reasoning_buffer:
                         reasoning_content = ''.join(reasoning_buffer)
-                        reasoning_container.markdown(reasoning_content)
+                        reasoning_container.markdown(
+                            f"<div class='reasoning-container'>{reasoning_content}</div>",
+                            unsafe_allow_html=True
+                        )
                     if answer_buffer:
                         answer_content = ''.join(answer_buffer)
-                        answer_container.markdown(answer_content)
+                        answer_container.markdown(
+                            f"<div class='answer-container'>{answer_content}</div>",
+                            unsafe_allow_html=True
+                        )
                     
                     # 更新消息历史
                     full_response = ""

@@ -6,9 +6,13 @@ from dotenv import load_dotenv
 import os
 import time
 from frontend.utils import show_sidebar
+from frontend.session_state import init_session_state
 
 # 加载环境变量
 load_dotenv()
+
+# 初始化会话状态
+init_session_state()
 
 # 设置页面配置
 st.set_page_config(
@@ -17,6 +21,10 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="auto"
 )
+
+# 设置后端API地址
+BACKEND_URL = "http://localhost:8000"
+
 # 显示侧边栏
 selected = show_sidebar()
 
@@ -26,55 +34,123 @@ st.title("长文本生成")
 # 自定义CSS样式
 st.markdown("""
 <style>
+    :root {
+        --primary-color: #2563eb;
+        --success-bg: #f0fdf4;
+        --warning-bg: #fffbeb;
+        --error-bg: #fef2f2;
+        --text-primary: #1f2937;
+        --text-secondary: #4b5563;
+    }
+
     .longtext-container {
-        max-width: 1000px;
+        max-width: min(1000px, 90%);
         margin: 0 auto;
         padding: 2rem;
     }
+
     .input-section {
-        background-color: #F9FAFB;
-        padding: 2rem;
+        background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+        padding: 2.5rem;
         border-radius: 1rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
+                    0 2px 4px -2px rgba(0, 0, 0, 0.05);
         margin-bottom: 2rem;
+        border: 1px solid #e5e7eb;
     }
+
     .result-section {
-        background-color: #F0FDF4;
+        background: var(--success-bg);
         padding: 2rem;
         border-radius: 1rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         margin-top: 2rem;
+        border: 1px solid #bbf7d0;
     }
+
     .processing-section {
-        background-color: #FFF7ED;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin: 1rem 0;
-        font-style: italic;
-    }
-    .outline-section {
-        background-color: #F0F9FF;
+        background: var(--warning-bg);
         padding: 1.5rem;
-        border-radius: 0.5rem;
-        margin: 1rem 0;
+        border-radius: 0.75rem;
+        margin: 1.5rem 0;
+        position: relative;
+        overflow: hidden;
     }
+
+    .processing-section::after {
+        content: "";
+        position: absolute;
+        left: -100%;
+        top: 0;
+        width: 200%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            transparent 25%,
+            rgba(255,255,255,0.4) 50%,
+            transparent 75%
+        );
+        animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+        100% { left: 200%; }
+    }
+
+    .outline-section {
+        background: var(--warning-bg);
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        margin: 1.5rem 0;
+        border-left: 4px solid #f59e0b;
+    }
+
     .article-section {
-        background-color: #FFFFFF;
-        padding: 2rem;
-        border-radius: 0.5rem;
-        border: 1px solid #E5E7EB;
-        margin: 1rem 0;
-        line-height: 1.8;
+        background: white;
+        padding: 2.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        margin: 2rem 0;
+        line-height: 1.75;
+        font-size: 1.05rem;
+        color: var(--text-primary);
     }
+
+    .article-section h2 {
+        color: var(--primary-color);
+        margin-top: 2rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
     .stButton>button {
         width: 100%;
-        border-radius: 0.5rem;
-        margin-top: 1rem;
-        transition: all 0.3s ease;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        background: var(--primary-color);
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        margin: 1.5rem 0;
     }
+
     .stButton>button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+                    0 4px 6px -4px rgba(0, 0, 0, 0.1);
+        background: #1d4ed8;
+    }
+
+    @media (max-width: 768px) {
+        .longtext-container {
+            padding: 1rem;
+        }
+        
+        .input-section,
+        .result-section {
+            padding: 1.5rem;
+        }
     }
 </style>
 """, unsafe_allow_html=True)

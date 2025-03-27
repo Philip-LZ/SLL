@@ -5,9 +5,13 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 import time
+from frontend.session_state import init_session_state
 
 # 加载环境变量
 load_dotenv()
+
+# 初始化会话状态
+init_session_state()
 
 # 设置页面配置
 st.set_page_config(
@@ -15,14 +19,6 @@ st.set_page_config(
     page_icon="🔐",
     layout="wide"
 )
-
-# 初始化会话状态
-if 'is_logged_in' not in st.session_state:
-    st.session_state.is_logged_in = False
-if 'user_token' not in st.session_state:
-    st.session_state.user_token = None
-if 'return_to' not in st.session_state:
-    st.session_state.return_to = None
 
 # 设置后端API地址
 BACKEND_URL = "http://localhost:8000"
@@ -38,7 +34,12 @@ with st.container():
     with st.form("login_form"):
         email = st.text_input("邮箱")
         password = st.text_input("密码", type="password")
-        submitted = st.form_submit_button("登录")
+        col1, col2 = st.columns(2)
+        with col1:
+            submitted = st.form_submit_button("登录")
+        with col2:
+            if st.form_submit_button("注册"):
+                st.switch_page("pages/register.py")
         
         if submitted:
             try:

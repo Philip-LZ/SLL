@@ -51,6 +51,14 @@ def test_db():
             print("数据库连接成功！")
     except Exception as e:
         print(f"数据库连接失败: {e}")
-        
+
+# 查询所用用户
+def query_all_users():
+    with engine.connect() as connection:
+        result = connection.execute(text("SELECT * FROM users"))
+        print(result.fetchall())
+
 if __name__ == "__main__":
     test_db()
+    query_all_users()
+

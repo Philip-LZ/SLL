@@ -22,7 +22,7 @@ class LitellmModel:
         api_key: Optional[str] = None,
         model_type: Literal["chat", "text"] = "chat",
         temperature: float = 0.0,
-        max_tokens: int = 1000,
+        max_tokens: int = 8192,
         cache: bool = True,
         **kwargs
     ):

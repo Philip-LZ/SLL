@@ -1,13 +1,16 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, BigInteger, String, DateTime, Boolean
 from datetime import datetime
 from database import Base, get_db
 from pydantic import BaseModel
 from datetime import timedelta
+from sqlalchemy.orm import selectinload
+
 import jwt
 from typing import Optional
+import os
 
 # 创建路由器
 router = APIRouter()
@@ -25,12 +28,12 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(50), unique=True, index=True)
+    user_id = Column(BigInteger, primary_key=True, index=True)
+    username = Column(String(64), unique=True, index=True)
     email = Column(String(255), unique=True, index=True)
-    password_hash = Column(String(255))
+    password_hash = Column(String(60))
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     @staticmethod
     def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -48,9 +51,11 @@ class UserLogin(BaseModel):
     password: str
 
 # JWT配置
-SECRET_KEY = "your-secret-key-here"  # 在生产环境中应该使用环境变量
+if not os.getenv("JWT_SECRET_KEY"):
+    raise ValueError("Missing JWT_SECRET_KEY environment variable")
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
@@ -64,36 +69,76 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 @router.post("/api/auth/login")
 async def login(user: UserLogin, db: Session = Depends(get_db)):
-    # 查找用户
-    db_user = db.query(User).filter(User.email == user.email).first()
-    if not db_user:
+    try:
+        # 使用索引优化查询
+        # 使用email唯一索引查询
+        db_user = db.query(User).filter(
+            User.email == user.email
+        ).first()
+        
+        # 用户不存在的处理
+        if not db_user:
+            raise HTTPException(
+                status_code=401,
+                detail="邮箱或密码错误"
+            )
+            
+        # 密码验证
+        try:
+            is_valid = User.verify_password(user.password, db_user.password_hash)
+            if not is_valid:
+                raise HTTPException(
+                    status_code=401,
+                    detail="邮箱或密码错误"
+                )
+        except ValueError as e:  # 捕获密码验证的特定异常
+            raise HTTPException(
+                status_code=500,
+                detail="密码验证过程发生错误"
+            )
+        
+        # 检查用户状态
+        if not db_user.is_active:
+            raise HTTPException(
+                status_code=403,
+                detail="账户已被禁用，请联系管理员"
+            )
+        
+        # 创建访问令牌
+        try:
+            access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+            access_token = create_access_token(
+                data={
+                    "sub": db_user.email,
+                    "user_id": str(db_user.user_id),  # 转换为字符串避免序列化问题
+                    "username": db_user.username
+                },
+                expires_delta=access_token_expires
+            )
+            
+            return {
+                "token": access_token,
+                "token_type": "bearer",
+                "user": {
+                    "id": db_user.user_id,
+                    "username": db_user.username,
+                    "email": db_user.email,
+                    "is_active": db_user.is_active
+                }
+            }
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail="令牌创建过程发生错误"
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
         raise HTTPException(
-            status_code=401,
-            detail="邮箱或密码错误"
+            status_code=500,
+            detail="登录过程发生错误，请稍后重试"
         )
-    
-    # 验证密码
-    if not User.verify_password(user.password, db_user.password_hash):
-        raise HTTPException(
-            status_code=401,
-            detail="邮箱或密码错误"
-        )
-    
-    # 创建访问令牌
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": db_user.email},
-        expires_delta=access_token_expires
-    )
-    
-    return {
-        "token": access_token,
-        "token_type": "bearer",
-        "user": {
-            "username": db_user.username,
-            "email": db_user.email
-        }
-    }
 
 @router.post("/api/auth/register")
 async def register(user: UserCreate, db: Session = Depends(get_db)):
