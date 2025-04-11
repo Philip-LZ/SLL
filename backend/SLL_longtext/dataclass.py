@@ -32,3 +32,4 @@ class ResearchQuestion:
     topic: str
     questions: List[str]
     perspective: str
+

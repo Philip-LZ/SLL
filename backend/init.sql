@@ -56,17 +56,27 @@ CREATE EXTENSION IF NOT EXISTS vector CASCADE;
 CREATE EXTENSION IF NOT EXISTS vectorscale CASCADE;
 CREATE EXTENSION IF NOT EXISTS ai CASCADE;
 
------------------------------ add test data---------------------------------
-
--- 插入新研究主题
-INSERT INTO research (title, lnk, snippet) VALUES ('极昼极夜现象是怎么形成的', 'http://m.gaosan.com/gaokao/305845.html', '文/叶丹\n极昼与极夜的形成，是 由于地球在沿椭圆形轨道绕太阳公转时，还绕着自身的倾斜地轴旋转 而造成的。地轴与其垂线形成一个约23.5°的倾斜角，因而地球在公转时便出现6个月时间两极之中总有一极朝着太阳，全是白天，另一极背对全是黑夜。\n极昼极夜产生原理\n地球在沿椭圆形轨道绕太阳公转时，还绕着自身的倾斜地轴旋转。原来，地球在自转时，地轴与其垂线形成一个约23.5°的倾斜角，因而地球在公转时便出现有6个月时间两极之中总有一极朝着太阳，全是白天；另一个极背向太阳，全是黑夜。南、北极这种神奇的自然现象是其他大洲所没有的。\n极昼极夜范围及时间\n北极：极昼：每年3月21日——9月23日；极夜：每年9月23日——次年3月21日\n南极：极夜：每年3月21日——9月23日；极昼：每年9月23日——次年3月21日\n6月22日,北半球极昼范围最大,整个北极圈及其以内地区出现极昼现象；\n9月23日,全球昼夜平分,北极圈及其以内地区无极昼极夜现象（除极点）.所以从6月22日到9月23日,北半球极昼范围由整个北极圈及其以内地区缩小到北极点.\n9月23日至12月22日,此时北极点出现极夜,到了12月22日,北极圈出现极夜.南半球相反!');
-
-SELECT ai.load_dataset('sgoel9/sam_altman_essays', 'default', table_name=>'blogs', batch_size=>50, max_batches=>1);
-ALTER TABLE blogs ADD PRIMARY KEY (id);
-
 SELECT ai.create_vectorizer(
     'public.research'::regclass,
     embedding=>ai.embedding_ollama('nomic-embed-text', 768),
     chunking=>ai.chunking_recursive_character_text_splitter('snippet'),
-    formatting=>ai.formatting_python_template('Web title: $title URL: url web chunk: $chunk')
+    formatting=>ai.formatting_python_template('Web title: $title URL: $lnk web chunk: $chunk')
 );
+
+DROP FUNCTION similarity_search(text,integer);
+CREATE OR REPLACE FUNCTION similarity_search(
+    query_text TEXT,
+    top_n INTEGER DEFAULT 5
+)
+RETURNS TABLE (
+    title VARCHAR(512),
+    lnk VARCHAR(512),
+    snippet TEXT
+) AS $$BEGIN
+    RETURN QUERY
+    SELECT re.title, re.lnk, re.snippet
+    FROM research_embedding AS re
+    ORDER BY embedding <=> ai.ollama_embed('nomic-embed-text', query_text)
+    LIMIT
+        top_n;
+END;$$ LANGUAGE plpgsql;

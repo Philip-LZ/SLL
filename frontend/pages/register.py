@@ -15,7 +15,7 @@ init_session_state()
 
 # 设置页面配置
 st.set_page_config(
-    page_title="SLL - 用户注册",
+    page_title="SLLRunner - 用户注册",
     page_icon="📝",
     layout="wide"
 )
@@ -24,7 +24,7 @@ st.set_page_config(
 BACKEND_URL = "http://localhost:8000"
 
 # 页面标题
-st.title("SLL 用户注册")
+st.title("SLLRunner 用户注册")
 
 # 主界面
 with st.container():

@@ -1,6 +1,6 @@
 @echo off
 
-echo Starting SLL System...
+echo Starting SLLRunner System...
 
 :: Start backend server
 start "Backend Server" cmd /k "cd backend && python main.py"

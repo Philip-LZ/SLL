@@ -8,18 +8,19 @@ You need to set up the following environment variables to run this script:
 Output will be structured as below
 args.output_dir/
     topic_name/  # topic_name will follow convention of underscore-connected topic name w/o space and slash
-        conversation_log.json           # Log of information-seeking conversation
-        raw_search_results.json         # Raw search results from search engine
-        direct_gen_outline.txt          # Outline directly generated with LLM's parametric knowledge
-        storm_gen_outline.txt           # Outline refined with collected information
-        url_to_info.json                # Sources that are used in the final article
-        storm_gen_article.txt           # Final article generated
-        storm_gen_article_polished.txt  # Polished final article (if args.do_polish_article is True)
+            conversation_log.json           #信息寻求对话日志
+            raw_search_results.json         #搜索引擎的原始搜索结果
+            direct_gen_outline.txt          #使用LLM的参数知识直接生成大纲
+            storm_gen_outline.txt           #根据收集到的信息完善大纲
+            url_to_info.json                #最后一篇文章中使用的源代码
+            storm_gen_article.txt           #已生成最终文章
+            storm_gen_article_polished.txt  #已抛光的最终文章（如果args.do_polished_article为True）
 """
 
 import logging
 import os
 from argparse import ArgumentParser
+from dotenv import load_dotenv
 
 from knowledge_storm import (
     STORMWikiRunnerArguments,
@@ -28,10 +29,11 @@ from knowledge_storm import (
 )
 from knowledge_storm.lm import DeepSeekModel
 from knowledge_storm.rm import (
-    BingSearch,
-    GoogleSearch
+    GoogleSearch,
+    BochaRM
 )
-from knowledge_storm.utils import load_api_key
+
+load_dotenv()
 
 
 def sanitize_topic(topic):
@@ -53,7 +55,6 @@ def sanitize_topic(topic):
 
 
 def main(args):
-    load_api_key(toml_file_path="secrets.toml")
     lm_configs = STORMWikiLMConfigs()
 
     logger = logging.getLogger(__name__)
@@ -102,14 +103,14 @@ def main(args):
     # STORM is a knowledge curation system which consumes information from the retrieval module.
     # Currently, the information source is the Internet and we use search engine API as the retrieval module.
     match args.retriever:
-        case "bing":
-            rm = BingSearch(
-                bing_search_api=os.getenv("BING_SEARCH_API_KEY"),
-                k=engine_args.search_top_k,
-            )
         case "google":
             rm = GoogleSearch(
                 google_search_api_key=os.getenv("GOOGLE_API_KEY"),
+                k=engine_args.search_top_k,
+            )
+        case "bocha":
+            rm = BochaRM(
+                bocha_search_api=os.getenv("BOCHA_API_KEY"),
                 k=engine_args.search_top_k,
             )
         case _:
@@ -159,6 +160,7 @@ if __name__ == "__main__":
         "--retriever",
         type=str,
         choices=["bing", "you", "brave", "serper", "duckduckgo", "tavily", "searxng", "google"],
+        default="bocha",
         help="The search engine API to use for retrieving information.",
     )
     parser.add_argument(

@@ -17,7 +17,7 @@ if 'current_page' not in st.session_state:
 
 # 设置页面配置
 st.set_page_config(
-    page_title="SLL Chat",
+    page_title="SLLRunner Chat",
     page_icon="💬",
     layout="wide",
     initial_sidebar_state="auto"
@@ -85,14 +85,14 @@ selected = show_sidebar()
 
 if st.session_state.current_page == "主页":
     # 页面标题和内容容器
-    st.markdown("<h1 style='text-align: center;'>欢迎使用 SLL Chat 智能对话系统</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center;'>欢迎使用 SLLRunner Chat 智能对话系统</h1>", unsafe_allow_html=True)
 
     # 主要内容使用卡片式布局
     st.markdown("""
     <div style='background-color: #F9FAFB; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);'>
         <h2>👋 欢迎</h2>
         <p style='font-size: 1.1rem; line-height: 1.6; color: #374151;'>
-            SLL Chat 是一个智能对话系统，它可以：
+            SLLRunner Chat 是一个智能对话系统，它可以：
         </p>
         <ul style='list-style-type: none; padding-left: 1rem;'>
             <li style='margin: 1rem 0;'>💬 <strong>进行自然语言对话</strong> - 智能理解并回应您的问题</li>

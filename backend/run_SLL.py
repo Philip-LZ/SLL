@@ -2,14 +2,14 @@
 
 需要的环境变量：
     - DEEPSEEK_API_KEY： deepseek model API key
-    - BOSHA_API_KEY： Bosha Search API key
+    - BOCHA_API_KEY： Bocha Search API key
 """
 
 import os
 import logging
 from argparse import ArgumentParser
 from dotenv import load_dotenv
-from SLL_longtext import SLLConfig, SLL
+from SLL_longtext import SLLRunner, SLLRunnerArguments
 import json
 
 # 设置日志记录
@@ -24,7 +24,7 @@ def main():
     load_dotenv()
 
     # 检查必要的环境变量
-    required_env_vars = ['DEEPSEEK_API_KEY', 'BOSHA_API_KEY']
+    required_env_vars = ['DEEPSEEK_API_KEY', 'BOCHA_API_KEY']
     for var in required_env_vars:
         if not os.getenv(var):
             logger.error(f'缺少环境变量: {var}')
@@ -49,7 +49,7 @@ def main():
     args = parser.parse_args()
 
     # 创建配置对象
-    config = SLLConfig(
+    config = SLLRunnerArguments(
         output_dir=args.output_dir,
         max_conv_turns=args.max_conv_turns,
         max_perspectives=args.max_perspectives,
@@ -61,7 +61,7 @@ def main():
 
     try:
         # 初始化SLL实例
-        sll = SLL(config)
+        sll = SLLRunner(config)
 
         # 获取用户输入的主题
         topic = input('请输入要研究的主题: ')
@@ -74,9 +74,9 @@ def main():
         # 生成文章
         logger.info(f'当前研究主题: {topic}')
         # 先生成大纲和获取研究数据
-        outline_result = sll.generate_outline(topic)
+        outline_result = sll.run_outline_generation_module(topic)
         # 使用获取的大纲和研究数据生成文章
-        result = sll.generate_article(topic, outline_result['outline'], outline_result['research_data'])
+        result = sll.run_article_polishing_module(topic, outline_result['outline'], outline_result['research_data'])
         
         # 合并结果
         final_result = {

@@ -1,4 +1,4 @@
-"""Simplified version of SLL pipeline using DeepSeek models and Bocha search engine.
+"""Simplified version of SLLRunner pipeline using DeepSeek models and Bocha search engine.
 
 This module provides a streamlined implementation focused on:
 1. Conversation simulation
@@ -8,7 +8,7 @@ This module provides a streamlined implementation focused on:
 5. Article polishing
 
 Required environment variables:
-    - BOSHA_API_KEY： Bosha Search API key
+    - BOCHA_API_KEY： Bocha Search API key
     - ALI_MODEL_API_KEY： Aliyun model API key
 """
 
@@ -22,7 +22,7 @@ from openai import OpenAI
 
 @dataclass
 class SLLConfig:
-    """Configuration for SLL system"""
+    """Configuration for SLLRunner system"""
     output_dir: str
     max_conv_turns: int
     max_perspectives: int
@@ -51,7 +51,7 @@ class SLL:
                 "page": 1
             })
             headers = {
-                'Authorization': f'Bearer {os.getenv("BOSHA_API_KEY")}',
+                'Authorization': f'Bearer {os.getenv("BOCHA_API_KEY")}',
                 'Content-Type': 'application/json'
             }
             response = requests.post(url, headers=headers, data=payload)

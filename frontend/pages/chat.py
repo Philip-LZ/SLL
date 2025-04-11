@@ -16,7 +16,7 @@ init_session_state()
 
 # 设置页面配置
 st.set_page_config(
-    page_title="SLL Chat - 智能对话",
+    page_title="SLLRunner Chat - 智能对话",
     page_icon="💬",
     layout="wide",
     initial_sidebar_state="auto"
@@ -85,7 +85,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # 页面标题
-st.title("💬 SLL Chat 智能对话")
+st.title("💬 SLLRunner Chat 智能对话")
 st.markdown("<p style='color: #6B7280; font-size: 1.1rem;'>与 AI 助手进行自然、流畅的对话</p>", unsafe_allow_html=True)
 
 # 登录模态窗口

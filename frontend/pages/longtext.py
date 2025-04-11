@@ -16,7 +16,7 @@ init_session_state()
 
 # 设置页面配置
 st.set_page_config(
-    page_title="SLL - 长文本生成",
+    page_title="SLLRunner - 长文本生成",
     page_icon="📝",
     layout="wide",
     initial_sidebar_state="auto"
@@ -156,7 +156,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # 页面标题
-st.title("📝 SLL 长文本生成系统")
+st.title("📝 SLLRunner 长文本生成系统")
 st.markdown("<p style='color: #6B7280; font-size: 1.1rem;'>基于AI的智能文章生成系统</p>", unsafe_allow_html=True)
 
 # 主界面
@@ -165,7 +165,7 @@ with st.container():
     with st.container():
         st.markdown("<div class='input-section'>", unsafe_allow_html=True)
         topic = st.text_input("请输入研究主题", key="topic_input")
-        if st.button("生成文章", key="generate_article"):
+        if st.button("生成文章", key="run_article_polishing_module"):
             # 检查登录状态
             # 检查登录状态
             if not st.session_state.is_logged_in:
@@ -202,7 +202,7 @@ with st.container():
                     # 第一步：生成大纲
                     progress_container.markdown("*正在生成大纲...*")
                     response = requests.post(
-                        f"{BACKEND_URL}/api/generate_outline",
+                        f"{BACKEND_URL}/api/run_outline_generation_module",
                         json={"topic": topic},
                         timeout=3000,
                         headers={"Content-Type": "application/json"}
@@ -220,7 +220,7 @@ with st.container():
                         # 第二步：生成文章
                         progress_container.markdown("*正在生成文章...*")
                         response = requests.post(
-                            f"{BACKEND_URL}/api/generate_article",
+                            f"{BACKEND_URL}/api/run_article_polishing_module",
                             json={
                                 "topic": st.session_state.topic,
                                 "outline": st.session_state.outline,

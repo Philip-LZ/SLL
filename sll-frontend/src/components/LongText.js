@@ -21,7 +21,7 @@ function LongText() {
 
   return (
     <Content style={{ 
-      background: '#343541',
+      background: '#ffffff',
       padding: '20px',
       minHeight: '100vh'
     }}>
@@ -29,13 +29,14 @@ function LongText() {
         style={{
           maxWidth: '800px',
           margin: '0 auto',
-          background: '#444654'
+          background: '#ffffff',
+          border: '1px solid #e5e7eb'
         }}
         bodyStyle={{
           padding: '24px'
         }}
       >
-        <Title level={4} style={{ color: '#fff', marginBottom: '24px' }}>
+        <Title level={4} style={{ color: '#111827', marginBottom: '24px' }}>
           <FileTextOutlined style={{ marginRight: '8px' }} />
           长文本生成
         </Title>
@@ -47,9 +48,9 @@ function LongText() {
             placeholder="请输入要生成的文章主题..."
             autoSize={{ minRows: 3, maxRows: 6 }}
             style={{
-              background: '#40414f',
-              border: 'none',
-              color: '#fff'
+              background: '#f7f7f8',
+              border: '1px solid #e5e7eb',
+              color: '#333333'
             }}
           />
         </div>
@@ -73,10 +74,11 @@ function LongText() {
           <Card
             style={{
               marginTop: '24px',
-              background: '#40414f'
+              background: '#ffffff',
+              border: '1px solid #e5e7eb'
             }}
           >
-            <Paragraph style={{ color: '#fff' }}>
+            <Paragraph style={{ color: '#333333' }}>
               {generatedContent}
             </Paragraph>
           </Card>
