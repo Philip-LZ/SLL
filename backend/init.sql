@@ -18,18 +18,32 @@ CREATE TABLE users (
     is_active BOOLEAN DEFAULT TRUE
 );
 
--- 创建对话表
+-- 创建生成记录表
 DROP TABLE IF EXISTS generation_records CASCADE;
 CREATE TABLE generation_records (
-    record_id BIGSERIAL PRIMARY KEY,
+    uuid UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-    generated_text TEXT NOT NULL,     -- 直接存储用户生成的长文本
-    status VARCHAR(20) DEFAULT 'pending',
+    title VARCHAR(255),              -- 生成记录的标题
+    status VARCHAR(20) NOT NULL CHECK (status IN ('chat', 'longtext')) DEFAULT 'chat',
     created_at TIMESTAMP DEFAULT NOW()
 );
 -- 索引优化
 CREATE INDEX idx_records_user ON generation_records(user_id, created_at);
-CREATE INDEX ON generation_records USING hnsw (embedding vector_cosine_ops);  -- 向量索引
+CREATE INDEX idx_records_uuid ON generation_records(uuid);
+
+-- 创建聊天历史表
+DROP TABLE IF EXISTS chat_history CASCADE;
+CREATE TABLE chat_history (
+    message_id BIGSERIAL PRIMARY KEY,
+    record_uuid UUID NOT NULL REFERENCES generation_records(uuid) ON DELETE CASCADE,
+    message_type VARCHAR(10) NOT NULL CHECK (message_type IN ('user', 'assistant')), -- 消息类型：用户输入或AI响应
+    content TEXT NOT NULL,           -- 消息内容
+    sequence_number INT NOT NULL,    -- 消息顺序号
+    created_at TIMESTAMP DEFAULT NOW()
+);
+-- 索引优化
+CREATE INDEX idx_chat_history_record ON chat_history(record_uuid, sequence_number);
+CREATE INDEX idx_chat_history_type ON chat_history(record_uuid, message_type);
 
 -- 创建url信息表
 DROP TABLE IF EXISTS research CASCADE;
@@ -43,14 +57,9 @@ CREATE TABLE research (
 -- 加速URL搜索
 CREATE INDEX idx_research_url ON research USING GIN(lnk gin_trgm_ops);
 
--- 关联表 (generation_research）
-DROP TABLE IF EXISTS generation_research CASCADE;
-CREATE TABLE generation_research (
-    generation_record_id BIGINT REFERENCES generation_records(record_id) ON DELETE CASCADE,
-    research_id BIGINT REFERENCES research(research_id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT NOW(),
-    PRIMARY KEY (generation_record_id, research_id)  -- 联合主键
-);
+-- 关联表 (chat_history）
+DROP TABLE IF EXISTS chat_history CASCADE;
+
 
 CREATE EXTENSION IF NOT EXISTS vector CASCADE;
 CREATE EXTENSION IF NOT EXISTS vectorscale CASCADE;
@@ -80,3 +89,19 @@ RETURNS TABLE (
     LIMIT
         top_n;
 END;$$ LANGUAGE plpgsql;
+
+-- Insert a sample user
+INSERT INTO users (username, email, password_hash)
+VALUES ('john_doe', 'john.doe@example.com', '$2b$12$KIXc5e2H80itp6S8iLZzJ.ZX1gY4f8Le6U5N2tkhNVUH0bmaFvL5G');
+
+-- Insert a sample generation record
+INSERT INTO generation_records (user_id, title, status)
+VALUES ('123e4567-e89b-12d3-a456-426614174000', 'Sample Chat Record', 'chat');
+
+-- Insert sample chat history
+INSERT INTO chat_history (record_uuid, message_type, content, sequence_number)
+VALUES
+('9933bfba-c321-4c9a-95d3-c018a3c499cc', 'user', 'Hello, how are you?', 1),
+('9933bfba-c321-4c9a-95d3-c018a3c499cc', 'assistant', 'I am an AI, I do not have feelings, but thank you for asking!', 2),
+('9933bfba-c321-4c9a-95d3-c018a3c499cc', 'user', 'Can you help me with something?', 3),
+('9933bfba-c321-4c9a-95d3-c018a3c499cc', 'assistant', 'Of course! What do you need help with?', 4);

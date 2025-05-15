@@ -56,6 +56,4 @@ htmlcov/
 
 knowledge_storm
 backend/results
-demo_light
-sll-frontend/node_modules
-sll-frontend/build
+
