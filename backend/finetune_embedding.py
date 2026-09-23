@@ -85,7 +85,7 @@ def prepare_data(args: argparse.Namespace) -> tuple[list[dict[str, str]], list[d
         raise ValueError("自定义模型必须明确指定 query 和 document 前缀")
 
     train = load_pairs(Path(args.train))
-    evaluation = load_pairs(Path(args.eval)) if args.eval else None
+    evaluation = load_pairs(Path(args.eval)) if args.eval is not None else None
     if evaluation and {pair["query"] for pair in train} & {pair["query"] for pair in evaluation}:
         raise ValueError("训练集和验证集的 query 不能重复")
     return train, evaluation

@@ -141,6 +141,11 @@ class FineTuneEmbeddingDataTests(unittest.TestCase):
             "--train", str(self.path), "--eval", str(evaluation)]))
         self.assertEqual(len(eval_rows), 2)
 
+    def test_explicit_empty_evaluation_path_is_invalid(self):
+        self.write_rows(self.valid_rows())
+        with self.assertRaises(ValueError):
+            prepare_data(parse_args(["--train", str(self.path), "--eval", ""]))
+
 
 if __name__ == "__main__":
     unittest.main()
