@@ -129,8 +129,8 @@ class WebKnowledge:
 #     from backend.SLL_longtext.models import DeepSeekModel
 #     from backend.SLL_longtext.engine import SLLDatabaseEngine
 #     topic = "LLM为什么能实现回答用户的问题"
-#     search_engine=BochaSearch(bocha_search_api="sk-999323aed0d446748ff32d4c242cd1b9", database_engine=SLLDatabaseEngine)
-#     model = DeepSeekModel(api_key="sk-82736a81ee294720b1faf7519e30013e")
+#     search_engine=BochaSearch(bocha_search_api="<your_bocha_api_key>", database_engine=SLLDatabaseEngine)
+#     model = DeepSeekModel(api_key="<your_deepseek_api_key>")
 #     persona_generator = PersonaGenerator(model=model, topic=topic, max_num_persona=3)
 #     webKnowledge = WebKnowledge(search_engine=search_engine, persona_generator=persona_generator,model=model, database_engine=SLLDatabaseEngine)
 #     # print(webKnowledge.websearch_all_questions(topic=topic,questions_number=1))
