@@ -49,7 +49,7 @@
 - `retrieval_data(pairs: list[dict[str, str]]) -> tuple[dict[str, str], dict[str, str], dict[str, set[str]]]`：返回 queries、corpus、relevant_docs。
 - `parse_args(argv: list[str] | None = None) -> argparse.Namespace`：标准库解析，不导入训练依赖。
 
-- [ ] **Step 1: 写失败的数据测试。** 用 `unittest.TestCase` 和 `TemporaryDirectory`，JSONL 内容通过 `json.dumps(..., ensure_ascii=False)` 写入，不使用真实用户数据。首先固定去重和多正例行为：
+- [x] **Step 1: 写失败的数据测试。** 用 `unittest.TestCase` 和 `TemporaryDirectory`，JSONL 内容通过 `json.dumps(..., ensure_ascii=False)` 写入，不使用真实用户数据。首先固定去重和多正例行为：
 
 ```python
 pairs = [
@@ -75,9 +75,9 @@ for bad_line in ['{', '[]', '{}', '{"query": 1, "positive": "d"}',
             load_pairs(path)
 ```
 
-- [ ] **Step 2: 确认红灯。** 执行 `python3 -m unittest discover -s backend -p test_finetune_embedding.py -v`，此时应因模块/函数尚不存在失败。
+- [x] **Step 2: 确认红灯。** 执行 `python3 -m unittest discover -s backend -p test_finetune_embedding.py -v`，此时应因模块/函数尚不存在失败。
 
-- [ ] **Step 3: 实现数据函数。** `load_pairs` 逐行读取，跳过空行；捕获 JSONDecodeError 并附加路径/行号；对象和字段检查后用 `(query, positive)` 集合去重。最后分别检查两列不同值数量不少于 2。检索映射使用稳定 ID：
+- [x] **Step 3: 实现数据函数。** `load_pairs` 逐行读取，跳过空行；捕获 JSONDecodeError 并附加路径/行号；对象和字段检查后用 `(query, positive)` 集合去重。最后分别检查两列不同值数量不少于 2。检索映射使用稳定 ID：
 
 ```python
 def retrieval_data(pairs):
@@ -90,7 +90,7 @@ def retrieval_data(pairs):
             {did: document for document, did in document_ids.items()}, relevant)
 ```
 
-- [ ] **Step 4: 测试并实现 CLI 边界。** 参数为 `--train`（必选）、`--eval`、`--model`、`--output`（默认 `backend/embedding-output`）、`--batch-size`（16）、`--epochs`（1，正整数）、`--learning-rate`（2e-5）、`--max-length`（512）、`--seed`（42）、`--device`（auto/cpu/cuda）、`--query-prefix`、`--document-prefix`、`--trust-remote-code`。
+- [x] **Step 4: 测试并实现 CLI 边界。** 参数为 `--train`（必选）、`--eval`、`--model`、`--output`（默认 `backend/embedding-output`）、`--batch-size`（16）、`--epochs`（1，正整数）、`--learning-rate`（2e-5）、`--max-length`（512）、`--seed`（42）、`--device`（auto/cpu/cuda）、`--query-prefix`、`--document-prefix`、`--trust-remote-code`。
 
 ```python
 if args.batch_size < 2 or args.epochs < 1 or args.max_length < 1:
@@ -106,7 +106,7 @@ if output.exists() and (not output.is_dir() or any(output.iterdir())):
 
 默认模型的未指定前缀补为 Nomic 前缀；自定义模型要求两个前缀均不为 None，空字符串合法。输入清理后检查 `{p['query'] for p in train} & {p['query'] for p in evaluation}` 非空则报错。暂不创建输出目录。测试对 nan/inf/零/负学习率、batch size 1、零 epochs、非空目录、输出为文件、自定义模型前缀缺失、空前缀和训练/验证查询重复逐项断言。
 
-- [ ] **Step 5: 确认绿灯并提交。** 执行上述 unittest 命令及 `python3 backend/finetune_embedding.py --help`；数据准备阶段和帮助不应要求 torch。执行 `git diff --check`，只提交这两个文件，提交信息 `feat: validate embedding fine-tuning inputs`。
+- [x] **Step 5: 确认绿灯并提交。** 执行上述 unittest 命令及 `python3 backend/finetune_embedding.py --help`；数据准备阶段和帮助不应要求 torch。执行 `git diff --check`，只提交这两个文件，提交信息 `feat: validate embedding fine-tuning inputs`。
 
 ## Task 2: 训练、评估与可加载产物
 
@@ -119,7 +119,7 @@ if output.exists() and (not output.is_dir() or any(output.iterdir())):
 - `main(argv: list[str] | None = None) -> None`：解析并执行；用户输入错误通过 parser.error 输出。
 - 输出 `output/model/`、`output/run_config.json`、可选 `output/metrics.json`。
 
-- [ ] **Step 1: 写真实链路失败测试。** 同一测试文件中的训练测试仅在 `SLL_EMBEDDING_SMOKE=1` 时启用；普通测试显式显示 skipped。使用 `BertConfig(vocab_size=16, hidden_size=16, num_hidden_layers=1, num_attention_heads=2, intermediate_size=32)`、本地 vocab 和 BertTokenizer 保存临时模型。用 `models.Transformer`、`models.Pooling` 包装为 SentenceTransformer 并保存本地目录，无需下载权重。
+- [x] **Step 1: 写真实链路失败测试。** 同一测试文件中的训练测试仅在 `SLL_EMBEDDING_SMOKE=1` 时启用；普通测试显式显示 skipped。使用 `BertConfig(vocab_size=16, hidden_size=16, num_hidden_layers=1, num_attention_heads=2, intermediate_size=32)`、本地 vocab 和 BertTokenizer 保存临时模型。用 `models.Transformer`、`models.Pooling` 包装为 SentenceTransformer 并保存本地目录，无需下载权重。
 
 ```python
 before = {name: value.detach().clone() for name, value in base.named_parameters()}
@@ -136,11 +136,11 @@ self.assertEqual(set(metrics), {"before", "after", "queries", "documents"})
 
 训练测试构造至少四条不同 query/positive 的训练对和两个独立验证 query；batch size 2、epochs 1、max length 16、CPU、空前缀。将所有测试文本使用的 token 放入 vocab，防止全部变成同一个未知 token。分别测试无验证集时不产生 metrics.json，以及四行共享文档而 batch size 4 时拒绝训练。
 
-- [ ] **Step 2: 建立独立环境，运行确认红灯。** 选择可用的受依赖支持 Python，优先 3.11/3.12；在 `/tmp/sll-embedding-venv` 安装 `sentence-transformers[train]` 与 Nomic 所需的 `einops`，确认实际 API 后将通过测试的直接依赖版本写入 requirements 文件。若环境安装受限，保存失败证据并继续标准库测试，明确真实训练未验证。
+- [x] **Step 2: 建立独立环境，运行确认红灯。** 选择可用的受依赖支持 Python，优先 3.11/3.12；在 `/tmp/sll-embedding-venv` 安装 `sentence-transformers[train]` 与 Nomic 所需的 `einops`，确认实际 API 后将通过测试的直接依赖版本写入 requirements 文件。若环境安装受限，保存失败证据并继续标准库测试，明确真实训练未验证。
 
 运行 `SLL_EMBEDDING_SMOKE=1 /tmp/sll-embedding-venv/bin/python -m unittest discover -s backend -p test_finetune_embedding.py -v`，预期因 train 尚未实现失败。
 
-- [ ] **Step 3: 接入原生训练器。** 在 `prepare_data` 成功后延迟导入训练依赖并调用 `set_seed(args.seed)`。保持数据列顺序 query/positive，用显式前缀拼接训练文本；清空加载模型的 default_prompt_name 防止 encode 自动重复添加前缀。
+- [x] **Step 3: 接入原生训练器。** 在 `prepare_data` 成功后延迟导入训练依赖并调用 `set_seed(args.seed)`。保持数据列顺序 query/positive，用显式前缀拼接训练文本；清空加载模型的 default_prompt_name 防止 encode 自动重复添加前缀。
 
 ```python
 dataset = Dataset.from_list([
@@ -163,7 +163,7 @@ training_args = SentenceTransformerTrainingArguments(
 
 只支持单进程训练；检测 WORLD_SIZE 大于 1 则明确报错。CUDA 显式请求而不可用时报错。用相同版本的 NoDuplicatesBatchSampler、seed 和 drop_last 检查至少有一个完整批次，随后重置采样随机状态，避免检查改变实际顺序；不要依赖 sampler 的估算长度。确认后加载模型、设置 max_seq_length，并构建 Trainer 和 MultipleNegativesRankingLoss。
 
-- [ ] **Step 4: 接入训练前后评估并保存结果。** 用 retrieval_data 构建验证映射，传递显式 query_prompt/corpus_prompt 和余弦函数。
+- [x] **Step 4: 接入训练前后评估并保存结果。** 用 retrieval_data 构建验证映射，传递显式 query_prompt/corpus_prompt 和余弦函数。
 
 ```python
 evaluator = InformationRetrievalEvaluator(
@@ -183,14 +183,14 @@ model.save_pretrained(str(Path(args.output) / "model"))
 
 上述评估调用仅在提供验证集时执行，训练调用两条路径共用。筛选实际返回键中的 recall@1/5/10 和 mrr@10，转为 Python float；JSON 使用 allow_nan=False。记录验证查询与文档数。run_config.json 保存 CLI 参数、实际前缀、基础模型和 importlib.metadata.version 查得的训练依赖版本。最终模型保存后再报告成功，失败保留异常，不伪造完成信息。默认路径加入 .gitignore。
 
-- [ ] **Step 5: 写中文使用说明。** 包含以下命令、两条 JSONL 格式示例和可执行加载示例；明确示例数据只演示格式，正式训练需用户数据，batch size 不得超过可组成的完整批次大小。说明全参数训练显存开销、验证候选集范围、默认模型的语言适用性应由实际验证集衡量、其他模型需显式设置前缀、首次下载与真正离线运行的区别。
+- [x] **Step 5: 写中文使用说明。** 包含以下命令、两条 JSONL 格式示例和可执行加载示例；明确示例数据只演示格式，正式训练需用户数据，batch size 不得超过可组成的完整批次大小。说明全参数训练显存开销、验证候选集范围、默认模型的语言适用性应由实际验证集衡量、其他模型需显式设置前缀、首次下载与真正离线运行的区别。
 
 ```bash
 python3.11 -m venv /tmp/sll-embedding-venv
 /tmp/sll-embedding-venv/bin/python -m pip install -r backend/requirements-embedding.txt
 /tmp/sll-embedding-venv/bin/python backend/finetune_embedding.py \
   --train /absolute/path/train.jsonl --eval /absolute/path/eval.jsonl \
-  --output backend/embedding-output --trust-remote-code
+  --output backend/embedding-output
 ```
 
 ```python
@@ -206,7 +206,7 @@ documents = model.encode([config["document_prefix"] + "相关文档内容"], nor
 print(query @ documents.T)
 ```
 
-- [ ] **Step 6: 运行验收并提交。** 运行标准库测试、开启真实训练测试、CLI 帮助和 git diff --check。安装环境可用时全部必须通过；当前环境无法运行的检查写入交付说明。检查 git diff 确保没有数据/权重/环境产物混入。提交本任务文件，提交信息 `feat: add offline embedding training and evaluation`。
+- [x] **Step 6: 运行验收并提交。** 运行标准库测试、开启真实训练测试、CLI 帮助和 git diff --check。安装环境可用时全部必须通过；当前环境无法运行的检查写入交付说明。检查 git diff 确保没有数据/权重/环境产物混入。提交本任务文件，提交信息 `feat: add offline embedding training and evaluation`。
 
 ## 执行与交付
 
@@ -214,3 +214,12 @@ print(query @ documents.T)
 最终报告给出脚本和说明链接、实际运行的检查、未验证的依赖或模型兼容性；不能把本地小模型测试说成已完成用户数据的正式微调。
 
 实现依据：[原生训练参数](https://sbert.net/docs/package_reference/sentence_transformer/training_args.html)、[检索评估器](https://sbert.net/docs/package_reference/sentence_transformer/evaluation.html)。
+
+## 执行结果（2026-09-24）
+
+- 两项任务均由 gpt-6-sol 实现并逐项审查；空验证集路径、采样种子不一致问题已修复并复审。
+- Python 3.12 独立环境运行 16 项测试全部通过，包含真实微型模型训练、权重更新、保存重载及评估。
+- 缓存默认 Nomic 模型在 CPU 上完成一步合成数据训练；保存后离线重新加载，输出有限的 768 维向量。
+- 当前环境无可用 GPU，CUDA 训练未实测；正式业务微调仍需真实训练数据。
+- 沿用当前专用功能分支和检出目录；代价是与该目录的其他本地操作共享工作区。
+- 测试采用新增模块的聚焦入口；既有递归发现因缺少 dspy 失败，因此未覆盖整个后端。

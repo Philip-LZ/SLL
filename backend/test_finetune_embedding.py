@@ -221,6 +221,17 @@ class FineTuneEmbeddingSmokeTests(unittest.TestCase):
         self.args.eval = None
         self.assertTrue(finetune_embedding.train(self.args).is_dir())
 
+    def test_each_epoch_must_have_a_full_batch(self):
+        self.write_rows(self.train_path, [("q1", "d1"), ("q1", "d2"),
+                                          ("q2", "d1"), ("q3", "d3")])
+        self.args.batch_size = 3
+        self.args.seed = 1
+        self.args.epochs = 2
+        self.args.eval = None
+        self.args.model = str(self.root / "missing-model")
+        with self.assertRaisesRegex(ValueError, "第 2 轮"):
+            finetune_embedding.train(self.args)
+
     def test_explicit_cuda_requires_available_gpu(self):
         import torch
         if torch.cuda.is_available():

@@ -7,7 +7,7 @@ python3.11 -m venv /tmp/sll-embedding-venv
 /tmp/sll-embedding-venv/bin/python -m pip install -r backend/requirements-embedding.txt
 /tmp/sll-embedding-venv/bin/python backend/finetune_embedding.py \
   --train /absolute/path/train.jsonl --eval /absolute/path/eval.jsonl \
-  --output backend/embedding-output --trust-remote-code
+  --output backend/embedding-output
 ```
 
 `train.jsonl` 每行是一组查询与相关文档，例如：

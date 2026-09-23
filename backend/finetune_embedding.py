@@ -122,8 +122,10 @@ def train(args: argparse.Namespace) -> Path:
 
     sampler = seeded_sampler(dataset, batch_size=args.batch_size, drop_last=True,
                              generator=torch.Generator().manual_seed(args.seed))
-    if next(iter(sampler), None) is None:
-        raise ValueError("训练数据无法组成无重复文本的完整批次")
+    for epoch in range(args.epochs):
+        sampler.set_epoch(epoch)
+        if next(iter(sampler), None) is None:
+            raise ValueError(f"第 {epoch + 1} 轮训练数据无法组成无重复文本的完整批次")
 
     model = SentenceTransformer(args.model, device=device, trust_remote_code=args.trust_remote_code)
     model.default_prompt_name = None
