@@ -206,7 +206,7 @@ if __name__ == '__main__':
 
     db_engine = SLLDatabaseEngine()
     search = BochaSearch(
-        bocha_search_api="sk-999323aed0d446748ff32d4c242cd1b9", 
+        bocha_search_api=os.getenv("BOCHA_API_KEY"),
         database_engine=db_engine.engine
     )
     search.search("python")

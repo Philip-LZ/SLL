@@ -103,5 +103,5 @@ class DeepSeekModel(dspy.OpenAI):
         return completions
 
 # if __name__ == "__main__":
-#     deepseek = DeepSeekModel(api_key="sk-82736a81ee294720b1faf7519e30013e")
+#     deepseek = DeepSeekModel(api_key="<your_deepseek_api_key>")
 #     print(deepseek("你好，你是谁？"))

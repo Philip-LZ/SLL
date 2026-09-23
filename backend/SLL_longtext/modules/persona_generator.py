@@ -65,7 +65,7 @@ class PersonaGenerator:
 # if __name__ == '__main__':
 #     from backend.SLL_longtext.models import DeepSeekModel
 #     topic = "LLM为什么能实现回答用户的问题"
-#     model = DeepSeekModel(api_key="sk-82736a81ee294720b1faf7519e30013e")
+#     model = DeepSeekModel(api_key="<your_deepseek_api_key>")
 #     persona_generator = PersonaGenerator(model=model, topic=topic, max_num_persona=3)
 #     personas = persona_generator.generate_personas()
 #     for persona in personas:
