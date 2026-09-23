@@ -102,7 +102,7 @@ def train(args: argparse.Namespace) -> Path:
     from datasets import Dataset
     from sentence_transformers import (SentenceTransformer, SentenceTransformerTrainer,
                                        SentenceTransformerTrainingArguments)
-    from sentence_transformers.base.sampler import BatchSamplers, NoDuplicatesBatchSampler
+    from sentence_transformers.base.sampler import NoDuplicatesBatchSampler
     from sentence_transformers.sentence_transformer.evaluation import InformationRetrievalEvaluator
     from sentence_transformers.sentence_transformer.losses import MultipleNegativesRankingLoss
     from sentence_transformers.util import cos_sim
@@ -117,8 +117,11 @@ def train(args: argparse.Namespace) -> Path:
          "positive": args.document_prefix + row["positive"]}
         for row in pairs
     ])
-    sampler = NoDuplicatesBatchSampler(dataset, args.batch_size, drop_last=True,
-                                       generator=torch.Generator().manual_seed(args.seed), seed=args.seed)
+    def seeded_sampler(data, **kwargs):
+        return NoDuplicatesBatchSampler(data, **(kwargs | {"seed": args.seed}))
+
+    sampler = seeded_sampler(dataset, batch_size=args.batch_size, drop_last=True,
+                             generator=torch.Generator().manual_seed(args.seed))
     if next(iter(sampler), None) is None:
         raise ValueError("训练数据无法组成无重复文本的完整批次")
 
@@ -129,7 +132,7 @@ def train(args: argparse.Namespace) -> Path:
     training_args = SentenceTransformerTrainingArguments(
         output_dir=str(output / "checkpoints"),
         num_train_epochs=args.epochs, per_device_train_batch_size=args.batch_size,
-        learning_rate=args.learning_rate, batch_sampler=BatchSamplers.NO_DUPLICATES,
+        learning_rate=args.learning_rate, batch_sampler=seeded_sampler,
         dataloader_drop_last=True, seed=args.seed, data_seed=args.seed,
         use_cpu=device == "cpu", save_strategy="no", report_to=[], logging_steps=1,
     )

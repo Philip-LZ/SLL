@@ -214,6 +214,13 @@ class FineTuneEmbeddingSmokeTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "完整批次"):
             finetune_embedding.train(self.args)
 
+    def test_trainer_uses_seed_that_preflight_validated(self):
+        self.write_rows(self.train_path, [("q1", "d1"), ("q1", "d2"),
+                                          ("q2", "d1"), ("q3", "d3")])
+        self.args.batch_size = 3
+        self.args.eval = None
+        self.assertTrue(finetune_embedding.train(self.args).is_dir())
+
     def test_explicit_cuda_requires_available_gpu(self):
         import torch
         if torch.cuda.is_available():
