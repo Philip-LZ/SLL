@@ -57,3 +57,4 @@ htmlcov/
 knowledge_storm
 backend/results
 
+/backend/embedding-output/

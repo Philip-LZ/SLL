@@ -1,8 +1,10 @@
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
 
+from backend import finetune_embedding
 from backend.finetune_embedding import load_pairs, parse_args, prepare_data, retrieval_data
 
 
@@ -145,6 +147,80 @@ class FineTuneEmbeddingDataTests(unittest.TestCase):
         self.write_rows(self.valid_rows())
         with self.assertRaises(ValueError):
             prepare_data(parse_args(["--train", str(self.path), "--eval", ""]))
+
+
+@unittest.skipUnless(os.environ.get("SLL_EMBEDDING_SMOKE") == "1", "set SLL_EMBEDDING_SMOKE=1")
+class FineTuneEmbeddingSmokeTests(unittest.TestCase):
+    def setUp(self):
+        from sentence_transformers import SentenceTransformer
+        from sentence_transformers.sentence_transformer.modules import Pooling, Transformer
+        from transformers import BertConfig, BertModel, BertTokenizer
+
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        encoder = self.root / "encoder"
+        encoder.mkdir()
+        tokens = ["[PAD]", "[UNK]", "[CLS]", "[SEP]", "[MASK]", "q1", "q2", "q3", "q4", "q5", "q6", "d1", "d2", "d3", "d4", "d5"]
+        (encoder / "vocab.txt").write_text("\n".join(tokens), encoding="utf-8")
+        BertTokenizer(vocab_file=str(encoder / "vocab.txt")).save_pretrained(str(encoder))
+        BertModel(BertConfig(vocab_size=16, hidden_size=16, num_hidden_layers=1,
+                             num_attention_heads=2, intermediate_size=32)).save_pretrained(str(encoder))
+        base = SentenceTransformer(modules=[Transformer(str(encoder), max_seq_length=16), Pooling(16)])
+        self.before = {name: value.detach().clone() for name, value in base.named_parameters()}
+        self.model_path = self.root / "base"
+        base.save_pretrained(str(self.model_path))
+        self.train_path = self.root / "train.jsonl"
+        self.eval_path = self.root / "eval.jsonl"
+        self.write_rows(self.train_path, [(f"q{i}", f"d{i}") for i in range(1, 5)])
+        self.write_rows(self.eval_path, [("q5", "d5"), ("q6", "d1")])
+        self.args = parse_args(["--train", str(self.train_path), "--eval", str(self.eval_path),
+                                "--model", str(self.model_path), "--output", str(self.root / "output"),
+                                "--query-prefix", "", "--document-prefix", "", "--batch-size", "2",
+                                "--epochs", "1", "--max-length", "16", "--device", "cpu"])
+
+    def write_rows(self, path, rows):
+        path.write_text("\n".join(json.dumps({"query": query, "positive": positive})
+                                  for query, positive in rows), encoding="utf-8")
+
+    def test_training_updates_weights_and_saves_evaluation(self):
+        import numpy as np
+        import torch
+        from sentence_transformers import SentenceTransformer
+
+        result = finetune_embedding.train(self.args)
+        trained = SentenceTransformer(str(result), device="cpu")
+        self.assertTrue(any(not torch.equal(self.before[name], value)
+                            for name, value in trained.named_parameters()))
+        vectors = trained.encode(["q1", "q2"])
+        self.assertEqual(vectors.shape, (2, 16))
+        self.assertTrue(np.isfinite(vectors).all())
+        metrics = json.loads((Path(self.args.output) / "metrics.json").read_text())
+        self.assertEqual(set(metrics), {"before", "after", "queries", "documents"})
+        self.assertEqual((metrics["queries"], metrics["documents"]), (2, 2))
+        self.assertEqual(set(metrics["before"]), {"recall@1", "recall@5", "recall@10", "mrr@10"})
+        self.assertTrue((Path(self.args.output) / "run_config.json").is_file())
+
+    def test_training_without_evaluation_has_no_metrics(self):
+        self.args.eval = None
+        result = finetune_embedding.train(self.args)
+        self.assertTrue(result.is_dir())
+        self.assertFalse((Path(self.args.output) / "metrics.json").exists())
+
+    def test_duplicate_documents_cannot_form_a_full_batch(self):
+        self.write_rows(self.train_path, [("q1", "d1"), ("q2", "d1"),
+                                          ("q3", "d1"), ("q4", "d2")])
+        self.args.batch_size = 4
+        with self.assertRaisesRegex(ValueError, "完整批次"):
+            finetune_embedding.train(self.args)
+
+    def test_explicit_cuda_requires_available_gpu(self):
+        import torch
+        if torch.cuda.is_available():
+            self.skipTest("CUDA is available")
+        self.args.device = "cuda"
+        with self.assertRaisesRegex(ValueError, "CUDA"):
+            finetune_embedding.train(self.args)
 
 
 if __name__ == "__main__":
