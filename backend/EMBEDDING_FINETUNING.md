@@ -39,4 +39,13 @@ documents = model.encode([config["document_prefix"] + "相关文档内容"], nor
 print(query @ documents.T)
 ```
 
+要在同一份独立评测集上重新比较基础模型与微调模型，运行：
+
+```bash
+/tmp/sll-embedding-venv/bin/python -m backend.benchmark_embedding \
+  --run-dir backend/embedding-output --k 5
+```
+
+脚本默认读取 `run_config.json` 中记录的训练集与验证集路径；文件迁移后可用 `--train`、`--eval` 指定新路径。输出 `benchmark.json`，包含当前训练文件去重后的样本数、模型名称、`MultipleNegativesRankingLoss`、查询与候选文档规模、数据文件 SHA-256、余弦相似度、Recall@K 和 MRR@K 的微调前后数值。统计训练样本数时需确保训练文件与当时微调使用的文件相同。K 不得大于候选文档数，训练与评测的 query 不能重叠。正式报告应使用足够大的独立评测语料，并保持基础模型权重版本、前缀和最大长度一致；两条样本的示例只能验证脚本可运行，不能证明效果提升。
+
 接入现有在线检索是后续工作；届时需要用新模型重建文档向量。
