@@ -1,27 +1,22 @@
-from fastapi import FastAPI, Request, Body
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, JSONResponse
-import uvicorn
-import time
+"""Run with python -m backend.main from the repository root."""
+
 import json
+import time
+from pathlib import Path
 
-from logging_config import setup_logging
-from SLL_longtext.engine import SLLRunner, SLLRunnerArguments, SLLConfigs
-from typing import List, Dict, Any
-from pydantic import BaseModel
+import uvicorn
 from dotenv import load_dotenv
-import os
-from router import router as auth_router
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 
-# 加载环境变量
-load_dotenv()
+# Load settings before importing routers that configure models and authentication.
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
-# 初始化日志系统
+from backend.api import router
+from backend.logging_config import setup_logging
+
 loggers = setup_logging()
 api_logger = loggers['api']
-chat_logger = loggers['chat']
-error_logger = loggers['error']
-
 app = FastAPI(title="SLLRunner Chat API", version="0.0.1")
 
 # 配置CORS
@@ -32,26 +27,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-
-
-
-# 定义请求模型
-class MultiPerspectiveRequest(BaseModel):
-    topic: str
-
-
-class ArticleGenerationRequest(BaseModel):
-    topic: str
-    outline: str
-    web_information: List[Dict[str, str]]
-
-
-class ArticlePolishRequest(BaseModel):
-    topic: str
-    article: str
-    web_information: List[Dict[str, str]]
 
 
 @app.get("/")
@@ -120,7 +95,7 @@ def stream_reset(body: bytes):
     return receive
 
 
-app.include_router(auth_router)
+app.include_router(router)
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("backend.main:app", host="127.0.0.1", port=8000, reload=True)

@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from backend.score_longtext_facts import score
+from backend.tools.score_longtext_facts import score
 
 
 class LongtextFactsTests(unittest.TestCase):

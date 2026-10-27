@@ -1,11 +1,13 @@
 import logging
 import os
+from pathlib import Path
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
 
 def setup_logging():
     # 创建日志目录结构
-    log_dirs = ['logs/api', 'logs/chat', 'logs/error']
+    log_root = Path(__file__).resolve().parent / 'logs'
+    log_dirs = [log_root / name for name in ('api', 'chat', 'error')]
     for dir_path in log_dirs:
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
@@ -29,7 +31,7 @@ def setup_logging():
     api_logger = logging.getLogger('api')
     api_logger.propagate = False  # 防止日志传播到根记录器
     api_handler = RotatingFileHandler(
-        f'logs/api/api_{datetime.now().strftime("%Y%m%d")}.log',
+        log_root / 'api' / f'api_{datetime.now().strftime("%Y%m%d")}.log',
         maxBytes=10485760,  # 10MB
         backupCount=10
     )
@@ -41,7 +43,7 @@ def setup_logging():
     chat_logger = logging.getLogger('chat')
     chat_logger.propagate = False  # 防止日志传播到根记录器
     chat_handler = RotatingFileHandler(
-        f'logs/chat/chat_{datetime.now().strftime("%Y%m%d")}.log',
+        log_root / 'chat' / f'chat_{datetime.now().strftime("%Y%m%d")}.log',
         maxBytes=10485760,
         backupCount=10
     )
@@ -53,7 +55,7 @@ def setup_logging():
     error_logger = logging.getLogger('error')
     error_logger.propagate = False  # 防止日志传播到根记录器
     error_handler = RotatingFileHandler(
-        f'logs/error/error_{datetime.now().strftime("%Y%m%d")}.log',
+        log_root / 'error' / f'error_{datetime.now().strftime("%Y%m%d")}.log',
         maxBytes=10485760,
         backupCount=10
     )

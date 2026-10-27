@@ -1,0 +1,314 @@
+{
+  "selection_split": "dev only; frozen before held-out test scoring",
+  "base_dev_recall_at_10": 0.8784640963611552,
+  "best_trained_run": "recovery-v3-b64",
+  "best_trained_dev_recall_at_10": 0.8755273762185527,
+  "recommended_model": "base",
+  "test_comparison": "Evaluate base versus best trained run once for diagnosis; no tuning after test.",
+  "dev_runs": [
+    {
+      "name": "recovery-v3-b32",
+      "config": {
+        "train": "/home/a/projects/SLL/backend/embedding-output/recovery-data-v3/train.jsonl",
+        "eval": "/home/a/projects/SLL/backend/embedding-output/recovery-data-v3/dev.jsonl",
+        "corpus": "/home/a/projects/SLL/backend/embedding-output/recovery-data-v3/dev_corpus.jsonl",
+        "scale": 20.0,
+        "bf16": true,
+        "gradient_checkpointing": true,
+        "model": "/home/a/projects/SLL/backend/embedding-output/bge-base-zh-v1.5",
+        "revision": "f03589ceff5aac7111bd60cfc7d497ca17ecac65",
+        "output": "/home/a/projects/SLL/backend/embedding-output/recovery-v3-b32",
+        "batch_size": 32,
+        "epochs": 3,
+        "learning_rate": 2e-05,
+        "max_length": 256,
+        "seed": 42,
+        "device": "cuda",
+        "query_prefix": "为这个句子生成表示以用于检索相关文章：",
+        "document_prefix": "",
+        "trust_remote_code": false,
+        "actual_device": "cuda",
+        "training_format": "query-positive",
+        "global_step": 111,
+        "best_checkpoint": "/home/a/projects/SLL/backend/embedding-output/recovery-v3-b32/checkpoints/checkpoint-111",
+        "best_dev_recall_at_10": 0.8634203443615209,
+        "data_sha256": {
+          "train": "305f24060f1123d5c7083824465e29a07ab21833ee7d3c4f9641bd0ec449a112",
+          "eval": "296c8722d2c5733cdddec1fc792fcfc366cf05938e6f56f77d1f09dfae13a08c",
+          "corpus": "48dbc2113a3184ad4b4661958314feafb975d05a58c32cb6b1c56354a8ef7511"
+        },
+        "model_revision": "f03589ceff5aac7111bd60cfc7d497ca17ecac65",
+        "dependencies": {
+          "torch": "2.14.0+cu130",
+          "sentence-transformers": "6.1.0",
+          "transformers": "5.17.0",
+          "datasets": "5.0.1",
+          "accelerate": "1.15.0",
+          "einops": "0.8.2"
+        }
+      },
+      "dev_metrics": {
+        "before": {
+          "recall@1": 0.15610007068095302,
+          "recall@5": 0.6207407616892912,
+          "recall@10": 0.8784640963611552,
+          "mrr@10": 0.887361111111111
+        },
+        "after": {
+          "recall@1": 0.1597806262365086,
+          "recall@5": 0.6068515120500414,
+          "recall@10": 0.8634203443615209,
+          "mrr@10": 0.8844999999999998
+        },
+        "queries": 100,
+        "documents": 1000
+      }
+    },
+    {
+      "name": "recovery-v3-b64",
+      "config": {
+        "train": "/home/a/projects/SLL/backend/embedding-output/recovery-data-v3/train.jsonl",
+        "eval": "/home/a/projects/SLL/backend/embedding-output/recovery-data-v3/dev.jsonl",
+        "corpus": "/home/a/projects/SLL/backend/embedding-output/recovery-data-v3/dev_corpus.jsonl",
+        "scale": 20.0,
+        "bf16": true,
+        "gradient_checkpointing": true,
+        "model": "/home/a/projects/SLL/backend/embedding-output/bge-base-zh-v1.5",
+        "revision": "f03589ceff5aac7111bd60cfc7d497ca17ecac65",
+        "output": "/home/a/projects/SLL/backend/embedding-output/recovery-v3-b64",
+        "batch_size": 64,
+        "epochs": 3,
+        "learning_rate": 1e-05,
+        "max_length": 256,
+        "seed": 42,
+        "device": "cuda",
+        "query_prefix": "为这个句子生成表示以用于检索相关文章：",
+        "document_prefix": "",
+        "trust_remote_code": false,
+        "actual_device": "cuda",
+        "training_format": "query-positive",
+        "global_step": 54,
+        "best_checkpoint": "/home/a/projects/SLL/backend/embedding-output/recovery-v3-b64/checkpoints/checkpoint-18",
+        "best_dev_recall_at_10": 0.8755273762185527,
+        "data_sha256": {
+          "train": "305f24060f1123d5c7083824465e29a07ab21833ee7d3c4f9641bd0ec449a112",
+          "eval": "296c8722d2c5733cdddec1fc792fcfc366cf05938e6f56f77d1f09dfae13a08c",
+          "corpus": "48dbc2113a3184ad4b4661958314feafb975d05a58c32cb6b1c56354a8ef7511"
+        },
+        "model_revision": "f03589ceff5aac7111bd60cfc7d497ca17ecac65",
+        "dependencies": {
+          "torch": "2.14.0+cu130",
+          "sentence-transformers": "6.1.0",
+          "transformers": "5.17.0",
+          "datasets": "5.0.1",
+          "accelerate": "1.15.0",
+          "einops": "0.8.2"
+        }
+      },
+      "dev_metrics": {
+        "before": {
+          "recall@1": 0.15610007068095302,
+          "recall@5": 0.6207407616892912,
+          "recall@10": 0.8784640963611552,
+          "mrr@10": 0.887361111111111
+        },
+        "after": {
+          "recall@1": 0.15611395956984192,
+          "recall@5": 0.618240761689291,
+          "recall@10": 0.8755273762185527,
+          "mrr@10": 0.8746666666666666
+        },
+        "queries": 100,
+        "documents": 1000
+      }
+    },
+    {
+      "name": "recovery-v3-negative-b64",
+      "config": {
+        "train": "/home/a/projects/SLL/backend/embedding-output/recovery-hard-data-v3/train.jsonl",
+        "eval": "/home/a/projects/SLL/backend/embedding-output/recovery-hard-data-v3/dev.jsonl",
+        "corpus": "/home/a/projects/SLL/backend/embedding-output/recovery-hard-data-v3/dev_corpus.jsonl",
+        "scale": 20.0,
+        "bf16": true,
+        "gradient_checkpointing": true,
+        "model": "/home/a/projects/SLL/backend/embedding-output/bge-base-zh-v1.5",
+        "revision": "f03589ceff5aac7111bd60cfc7d497ca17ecac65",
+        "output": "/home/a/projects/SLL/backend/embedding-output/recovery-v3-negative-b64",
+        "batch_size": 64,
+        "epochs": 3,
+        "learning_rate": 1e-05,
+        "max_length": 256,
+        "seed": 42,
+        "device": "cuda",
+        "query_prefix": "为这个句子生成表示以用于检索相关文章：",
+        "document_prefix": "",
+        "trust_remote_code": false,
+        "actual_device": "cuda",
+        "training_format": "query-positive-negative",
+        "global_step": 54,
+        "best_checkpoint": "/home/a/projects/SLL/backend/embedding-output/recovery-v3-negative-b64/checkpoints/checkpoint-18",
+        "best_dev_recall_at_10": 0.8702138466109055,
+        "data_sha256": {
+          "train": "a10c10accba403ce6fbe3b486303b1e654bb5fa045cb8790af6074a8ed62a8fb",
+          "eval": "296c8722d2c5733cdddec1fc792fcfc366cf05938e6f56f77d1f09dfae13a08c",
+          "corpus": "48dbc2113a3184ad4b4661958314feafb975d05a58c32cb6b1c56354a8ef7511"
+        },
+        "model_revision": "f03589ceff5aac7111bd60cfc7d497ca17ecac65",
+        "dependencies": {
+          "torch": "2.14.0+cu130",
+          "sentence-transformers": "6.1.0",
+          "transformers": "5.17.0",
+          "datasets": "5.0.1",
+          "accelerate": "1.15.0",
+          "einops": "0.8.2"
+        }
+      },
+      "dev_metrics": {
+        "before": {
+          "recall@1": 0.15610007068095302,
+          "recall@5": 0.6207407616892912,
+          "recall@10": 0.8784640963611552,
+          "mrr@10": 0.887361111111111
+        },
+        "after": {
+          "recall@1": 0.1611139595698419,
+          "recall@5": 0.6129074283559577,
+          "recall@10": 0.8702138466109055,
+          "mrr@10": 0.8939285714285713
+        },
+        "queries": 100,
+        "documents": 1000
+      }
+    },
+    {
+      "name": "recovery-v3-b128-t002",
+      "config": {
+        "train": "/home/a/projects/SLL/backend/embedding-output/recovery-data-v3/train.jsonl",
+        "eval": "/home/a/projects/SLL/backend/embedding-output/recovery-data-v3/dev.jsonl",
+        "corpus": "/home/a/projects/SLL/backend/embedding-output/recovery-data-v3/dev_corpus.jsonl",
+        "scale": 50.0,
+        "bf16": true,
+        "gradient_checkpointing": true,
+        "model": "/home/a/projects/SLL/backend/embedding-output/bge-base-zh-v1.5",
+        "revision": "f03589ceff5aac7111bd60cfc7d497ca17ecac65",
+        "output": "/home/a/projects/SLL/backend/embedding-output/recovery-v3-b128-t002",
+        "batch_size": 128,
+        "epochs": 3,
+        "learning_rate": 5e-06,
+        "max_length": 256,
+        "seed": 42,
+        "device": "cuda",
+        "query_prefix": "为这个句子生成表示以用于检索相关文章：",
+        "document_prefix": "",
+        "trust_remote_code": false,
+        "actual_device": "cuda",
+        "training_format": "query-positive",
+        "global_step": 27,
+        "best_checkpoint": "/home/a/projects/SLL/backend/embedding-output/recovery-v3-b128-t002/checkpoints/checkpoint-9",
+        "best_dev_recall_at_10": 0.8754287428258016,
+        "data_sha256": {
+          "train": "305f24060f1123d5c7083824465e29a07ab21833ee7d3c4f9641bd0ec449a112",
+          "eval": "296c8722d2c5733cdddec1fc792fcfc366cf05938e6f56f77d1f09dfae13a08c",
+          "corpus": "48dbc2113a3184ad4b4661958314feafb975d05a58c32cb6b1c56354a8ef7511"
+        },
+        "model_revision": "f03589ceff5aac7111bd60cfc7d497ca17ecac65",
+        "dependencies": {
+          "torch": "2.14.0+cu130",
+          "sentence-transformers": "6.1.0",
+          "transformers": "5.17.0",
+          "datasets": "5.0.1",
+          "accelerate": "1.15.0",
+          "einops": "0.8.2"
+        }
+      },
+      "dev_metrics": {
+        "before": {
+          "recall@1": 0.15610007068095302,
+          "recall@5": 0.6207407616892912,
+          "recall@10": 0.8784640963611552,
+          "mrr@10": 0.887361111111111
+        },
+        "after": {
+          "recall@1": 0.15798895956984194,
+          "recall@5": 0.6222358597285068,
+          "recall@10": 0.8754287428258016,
+          "mrr@10": 0.8818452380952381
+        },
+        "queries": 100,
+        "documents": 1000
+      }
+    },
+    {
+      "name": "recovery-v3-negative-b128-t002",
+      "config": {
+        "train": "/home/a/projects/SLL/backend/embedding-output/recovery-hard-data-v3/train.jsonl",
+        "eval": "/home/a/projects/SLL/backend/embedding-output/recovery-hard-data-v3/dev.jsonl",
+        "corpus": "/home/a/projects/SLL/backend/embedding-output/recovery-hard-data-v3/dev_corpus.jsonl",
+        "scale": 50.0,
+        "bf16": true,
+        "gradient_checkpointing": true,
+        "model": "/home/a/projects/SLL/backend/embedding-output/bge-base-zh-v1.5",
+        "revision": "f03589ceff5aac7111bd60cfc7d497ca17ecac65",
+        "output": "/home/a/projects/SLL/backend/embedding-output/recovery-v3-negative-b128-t002",
+        "batch_size": 128,
+        "epochs": 3,
+        "learning_rate": 5e-06,
+        "max_length": 256,
+        "seed": 42,
+        "device": "cuda",
+        "query_prefix": "为这个句子生成表示以用于检索相关文章：",
+        "document_prefix": "",
+        "trust_remote_code": false,
+        "actual_device": "cuda",
+        "training_format": "query-positive-negative",
+        "global_step": 27,
+        "best_checkpoint": "/home/a/projects/SLL/backend/embedding-output/recovery-v3-negative-b128-t002/checkpoints/checkpoint-18",
+        "best_dev_recall_at_10": 0.8691407628319393,
+        "data_sha256": {
+          "train": "a10c10accba403ce6fbe3b486303b1e654bb5fa045cb8790af6074a8ed62a8fb",
+          "eval": "296c8722d2c5733cdddec1fc792fcfc366cf05938e6f56f77d1f09dfae13a08c",
+          "corpus": "48dbc2113a3184ad4b4661958314feafb975d05a58c32cb6b1c56354a8ef7511"
+        },
+        "model_revision": "f03589ceff5aac7111bd60cfc7d497ca17ecac65",
+        "dependencies": {
+          "torch": "2.14.0+cu130",
+          "sentence-transformers": "6.1.0",
+          "transformers": "5.17.0",
+          "datasets": "5.0.1",
+          "accelerate": "1.15.0",
+          "einops": "0.8.2"
+        }
+      },
+      "dev_metrics": {
+        "before": {
+          "recall@1": 0.15610007068095302,
+          "recall@5": 0.6207407616892912,
+          "recall@10": 0.8784640963611552,
+          "mrr@10": 0.887361111111111
+        },
+        "after": {
+          "recall@1": 0.17835205480793714,
+          "recall@5": 0.6272642104627398,
+          "recall@10": 0.8691407628319393,
+          "mrr@10": 0.9165000000000001
+        },
+        "queries": 100,
+        "documents": 1000
+      }
+    }
+  ],
+  "model_source": {
+    "model": "BAAI/bge-base-zh-v1.5",
+    "revision": "f03589ceff5aac7111bd60cfc7d497ca17ecac65",
+    "local_path": "/home/a/projects/SLL/backend/embedding-output/bge-base-zh-v1.5"
+  },
+  "limitations": [
+    "Custom public dev split, not original lost data or official benchmark.",
+    "Base-model pretraining overlap and incomplete semantic labels cannot be excluded.",
+    "One training seed; no significance conclusion or guaranteed improvement."
+  ],
+  "model_files_sha256": {
+    "bge-base-zh-v1.5/pytorch_model.bin": "731cf5d88ed555a21ff2f2d9fa4db43b10489173ddd9178db3eecfd7a2bae044",
+    "recovery-v3-b64/model/model.safetensors": "0470f0ae89367f4319fac8df3160eba656a095b3b36666ad863f49cbd58c965e"
+  }
+}

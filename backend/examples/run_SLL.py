@@ -9,7 +9,7 @@ import os
 import logging
 from argparse import ArgumentParser
 from dotenv import load_dotenv
-from SLL_longtext import SLLRunner, SLLRunnerArguments
+from backend.SLL_longtext import SLLRunner, SLLRunnerArguments
 import json
 
 # 设置日志记录

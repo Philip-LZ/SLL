@@ -5,10 +5,10 @@ import hashlib
 import json
 from pathlib import Path
 
-from backend.finetune_embedding import load_pairs, retrieval_data
+from backend.tools.finetune_embedding import load_corpus, load_pairs, retrieval_data
 
 
-def load_inputs(run_dir: Path, train_path: str | None, eval_path: str | None, k: int):
+def load_inputs(run_dir: Path, train_path: str | None, eval_path: str | None, k: int, corpus_path: str | None = None):
     if k < 1:
         raise ValueError("K 必须为正整数")
     try:
@@ -24,10 +24,13 @@ def load_inputs(run_dir: Path, train_path: str | None, eval_path: str | None, k:
     train, evaluation = load_pairs(Path(train_file)), load_pairs(Path(eval_file))
     if {row["query"] for row in train} & {row["query"] for row in evaluation}:
         raise ValueError("训练集和评测集的 query 不能重复")
-    queries, corpus, relevant = retrieval_data(evaluation)
+    corpus_file = corpus_path if corpus_path is not None else config.get("corpus")
+    queries, corpus, relevant = retrieval_data(evaluation, load_corpus(Path(corpus_file)) if corpus_file else None)
     if k > len(corpus):
         raise ValueError(f"K={k} 超过评测候选文档数 {len(corpus)}")
     train_digest = hashlib.sha256(Path(train_file).read_bytes()).hexdigest()
+    if config.get("data_sha256", {}).get("train", train_digest) != train_digest:
+        raise ValueError("训练集 SHA-256 与训练时不一致，拒绝报告错误的样本数")
     eval_digest = hashlib.sha256(Path(eval_file).read_bytes()).hexdigest()
     return config, train, queries, corpus, relevant, train_digest, eval_digest
 
@@ -56,8 +59,8 @@ def summarize(model_name, train_count, query_count, document_count, k, digest, d
 
 
 def benchmark(run_dir: Path, train_path: str | None, eval_path: str | None,
-              k: int, device: str):
-    config, train, queries, corpus, relevant, train_digest, eval_digest = load_inputs(run_dir, train_path, eval_path, k)
+              k: int, device: str, corpus_path: str | None = None):
+    config, train, queries, corpus, relevant, train_digest, eval_digest = load_inputs(run_dir, train_path, eval_path, k, corpus_path)
 
     import torch
     from sentence_transformers import SentenceTransformer
@@ -76,7 +79,9 @@ def benchmark(run_dir: Path, train_path: str | None, eval_path: str | None,
 
     def evaluate(model_path):
         model = SentenceTransformer(model_path, device=actual_device,
-                                    trust_remote_code=config["trust_remote_code"])
+                                    trust_remote_code=config["trust_remote_code"],
+                                    revision=(config.get("revision") or config.get("model_revision"))
+                                    if model_path == config["model"] else None)
         model.default_prompt_name = None
         model.max_seq_length = config["max_length"]
         return evaluator(model)
@@ -90,7 +95,15 @@ def benchmark(run_dir: Path, train_path: str | None, eval_path: str | None,
     report["evaluation"].update({"query_prefix": config["query_prefix"],
                                  "document_prefix": config["document_prefix"],
                                  "max_length": config["max_length"],
-                                 "positive_pairs": sum(map(len, relevant.values()))})
+                                 "positive_pairs": sum(map(len, relevant.values())),
+                                 "recall_at_k_ceiling": sum(min(k, len(ids))/len(ids) for ids in relevant.values())/len(relevant)})
+    corpus_file = corpus_path if corpus_path is not None else config.get("corpus")
+    report["evaluation"]["corpus_sha256"] = (hashlib.sha256(Path(corpus_file).read_bytes()).hexdigest()
+                                             if corpus_file else None)
+    report["evaluation"]["recall_definition"] = "macro mean of retrieved relevant / all labeled relevant per query"
+    report["training"]["scale"] = config.get("scale", 20.0)
+    report["training"]["explicit_negative_pairs"] = sum("negative" in row for row in train)
+    report["training"]["model_revision"] = config.get("model_revision")
     return report
 
 
@@ -99,14 +112,18 @@ def main(argv: list[str] | None = None):
     parser.add_argument("--run-dir", type=Path, required=True, help="finetune_embedding.py 的输出目录")
     parser.add_argument("--train", help="原训练集路径；默认读取 run_config.json")
     parser.add_argument("--eval", help="独立评测集路径；默认读取 run_config.json")
-    parser.add_argument("--k", type=int, default=5)
+    parser.add_argument("--corpus", help="固定候选库；默认读取训练配置")
+    parser.add_argument("--k", type=int, default=10)
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
     parser.add_argument("--output", type=Path, help="JSON 报告路径；默认写入 run-dir/benchmark.json")
     args = parser.parse_args(argv)
     try:
-        result = benchmark(args.run_dir, args.train, args.eval, args.k, args.device)
         output = args.output or args.run_dir / "benchmark.json"
-        output.write_text(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8")
+        if output.exists():
+            raise ValueError(f"{output}: 报告已存在，请指定新路径")
+        result = benchmark(args.run_dir, args.train, args.eval, args.k, args.device, args.corpus)
+        with output.open("x", encoding="utf-8") as destination:
+            destination.write(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False))
     except (ValueError, OSError, KeyError) as error:
         parser.error(str(error))
     recall = result["metrics"]["recall_at_k"]

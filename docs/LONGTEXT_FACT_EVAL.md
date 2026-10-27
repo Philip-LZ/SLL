@@ -13,7 +13,7 @@ topic-1,candidate,2,1,资料B第1段
 `system` 仅填 `baseline` 或 `candidate`。两组必须覆盖相同的 `sample_id`，每篇至少标一条主张；同篇文章内的 `claim_id` 不得重复。正式评测应固定题目、可用资料与核查标准，并记录基线模型、提示词及当前流程设置。
 
 ```bash
-python3 -m backend.score_longtext_facts \
+python3 -m backend.tools.score_longtext_facts \
   --annotations /absolute/path/claims.csv \
   --baseline-name '基线模型名称' --baseline-setting '模型版本、提示词与资料设置' \
   --candidate-name '当前长文流程' --candidate-setting '流程版本、提示词与资料设置'

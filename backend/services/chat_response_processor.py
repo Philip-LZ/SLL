@@ -3,11 +3,12 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 import json
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
 
 # 加载环境变量
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 # 获取API配置
 DASHSCOPE_API_KEY = os.getenv("DEEPSEEK_API_KEY")

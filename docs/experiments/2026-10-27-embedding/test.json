@@ -1,0 +1,39 @@
+{
+  "training": {
+    "base_model": "/home/a/projects/SLL/backend/embedding-output/bge-base-zh-v1.5",
+    "pairs": 1200,
+    "loss": "MultipleNegativesRankingLoss",
+    "data_sha256": "305f24060f1123d5c7083824465e29a07ab21833ee7d3c4f9641bd0ec449a112",
+    "count_source": "current training JSONL, after deduplication",
+    "scale": 20.0,
+    "explicit_negative_pairs": 0,
+    "model_revision": "f03589ceff5aac7111bd60cfc7d497ca17ecac65"
+  },
+  "evaluation": {
+    "queries": 100,
+    "candidate_documents": 1000,
+    "k": 10,
+    "data_sha256": "46a8cd8e17a5a5bf16e4951da9c6519e2a73ae148e6e05dd0664511bb1086d8a",
+    "similarity": "cosine",
+    "device": "cuda",
+    "query_prefix": "为这个句子生成表示以用于检索相关文章：",
+    "document_prefix": "",
+    "max_length": 256,
+    "positive_pairs": 831,
+    "recall_at_k_ceiling": 0.9371172277379372,
+    "corpus_sha256": "b7842524627aee90b6f9a9aa14c67aaeecd8148e8c1d2cbe04ee4f9719272faf",
+    "recall_definition": "macro mean of retrieved relevant / all labeled relevant per query"
+  },
+  "metrics": {
+    "recall_at_k": {
+      "before": 0.8987698854666819,
+      "after": 0.8967676425405259,
+      "delta_percentage_points": -0.2002
+    },
+    "mrr_at_k": {
+      "before": 0.9433333333333335,
+      "after": 0.9441666666666666,
+      "delta_percentage_points": 0.0833
+    }
+  }
+}

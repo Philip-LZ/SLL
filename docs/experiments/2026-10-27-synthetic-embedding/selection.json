@@ -1,0 +1,141 @@
+{
+  "synthetic": true,
+  "data_manifest": "manifest.json",
+  "selection_split": "dev only; frozen before final test scoring",
+  "base_dev_recall_at_10": 0.68,
+  "selected_run": "synthetic-v1-b64",
+  "selected_dev_recall_at_10": 0.93,
+  "dev_runs": [
+    {
+      "name": "synthetic-v1-b64",
+      "config": {
+        "train": "/home/a/projects/SLL/backend/embedding-output/synthetic-data-v1/train.jsonl",
+        "eval": "/home/a/projects/SLL/backend/embedding-output/synthetic-data-v1/dev.jsonl",
+        "corpus": "/home/a/projects/SLL/backend/embedding-output/synthetic-data-v1/dev_corpus.jsonl",
+        "scale": 20.0,
+        "bf16": true,
+        "gradient_checkpointing": true,
+        "model": "/home/a/projects/SLL/backend/embedding-output/bge-base-zh-v1.5",
+        "revision": "f03589ceff5aac7111bd60cfc7d497ca17ecac65",
+        "output": "/home/a/projects/SLL/backend/embedding-output/synthetic-v1-b64",
+        "batch_size": 64,
+        "epochs": 5,
+        "learning_rate": 1e-05,
+        "max_length": 256,
+        "seed": 42,
+        "device": "cuda",
+        "query_prefix": "为这个句子生成表示以用于检索相关文章：",
+        "document_prefix": "",
+        "trust_remote_code": false,
+        "actual_device": "cuda",
+        "warmup_ratio": 0.1,
+        "selection_metric": "dev cosine_recall@10",
+        "training_format": "query-positive",
+        "global_step": 90,
+        "best_checkpoint": "/home/a/projects/SLL/backend/embedding-output/synthetic-v1-b64/checkpoints/checkpoint-36",
+        "best_dev_recall_at_10": 0.93,
+        "data_sha256": {
+          "train": "dc3346bb82855273852bb5b4c493fc337573059ab289f75b28a4699992ecb169",
+          "eval": "baa33f95af1179b32ee8421d225c6f0404c33f2b0fb8aa56a9bf2adda00ba964",
+          "corpus": "67c0fb85d351a1b5ff748d0205d5fe2fc30037b1b8399953e739345294d78c86"
+        },
+        "model_revision": "f03589ceff5aac7111bd60cfc7d497ca17ecac65",
+        "dependencies": {
+          "torch": "2.14.0+cu130",
+          "sentence-transformers": "6.1.0",
+          "transformers": "5.17.0",
+          "datasets": "5.0.1",
+          "accelerate": "1.15.0",
+          "einops": "0.8.2"
+        }
+      },
+      "dev_metrics": {
+        "before": {
+          "recall@1": 0.23,
+          "recall@5": 0.57,
+          "recall@10": 0.68,
+          "mrr@10": 0.361095238095238
+        },
+        "after": {
+          "recall@1": 0.42,
+          "recall@5": 0.72,
+          "recall@10": 0.93,
+          "mrr@10": 0.563543650793651
+        },
+        "queries": 100,
+        "documents": 1000
+      }
+    },
+    {
+      "name": "synthetic-v1-b32",
+      "config": {
+        "train": "/home/a/projects/SLL/backend/embedding-output/synthetic-data-v1/train.jsonl",
+        "eval": "/home/a/projects/SLL/backend/embedding-output/synthetic-data-v1/dev.jsonl",
+        "corpus": "/home/a/projects/SLL/backend/embedding-output/synthetic-data-v1/dev_corpus.jsonl",
+        "scale": 20.0,
+        "bf16": true,
+        "gradient_checkpointing": true,
+        "model": "/home/a/projects/SLL/backend/embedding-output/bge-base-zh-v1.5",
+        "revision": "f03589ceff5aac7111bd60cfc7d497ca17ecac65",
+        "output": "/home/a/projects/SLL/backend/embedding-output/synthetic-v1-b32",
+        "batch_size": 32,
+        "epochs": 5,
+        "learning_rate": 2e-05,
+        "max_length": 256,
+        "seed": 42,
+        "device": "cuda",
+        "query_prefix": "为这个句子生成表示以用于检索相关文章：",
+        "document_prefix": "",
+        "trust_remote_code": false,
+        "actual_device": "cuda",
+        "warmup_ratio": 0.1,
+        "selection_metric": "dev cosine_recall@10",
+        "training_format": "query-positive",
+        "global_step": 185,
+        "best_checkpoint": "/home/a/projects/SLL/backend/embedding-output/synthetic-v1-b32/checkpoints/checkpoint-37",
+        "best_dev_recall_at_10": 0.92,
+        "data_sha256": {
+          "train": "dc3346bb82855273852bb5b4c493fc337573059ab289f75b28a4699992ecb169",
+          "eval": "baa33f95af1179b32ee8421d225c6f0404c33f2b0fb8aa56a9bf2adda00ba964",
+          "corpus": "67c0fb85d351a1b5ff748d0205d5fe2fc30037b1b8399953e739345294d78c86"
+        },
+        "model_revision": "f03589ceff5aac7111bd60cfc7d497ca17ecac65",
+        "dependencies": {
+          "torch": "2.14.0+cu130",
+          "sentence-transformers": "6.1.0",
+          "transformers": "5.17.0",
+          "datasets": "5.0.1",
+          "accelerate": "1.15.0",
+          "einops": "0.8.2"
+        }
+      },
+      "dev_metrics": {
+        "before": {
+          "recall@1": 0.23,
+          "recall@5": 0.57,
+          "recall@10": 0.68,
+          "mrr@10": 0.361095238095238
+        },
+        "after": {
+          "recall@1": 0.38,
+          "recall@5": 0.73,
+          "recall@10": 0.92,
+          "mrr@10": 0.5349246031746033
+        },
+        "queries": 100,
+        "documents": 1000
+      }
+    }
+  ],
+  "test_evaluation_rule": "Base vs selected fine-tuned model exactly once on fixed100 queries and1000 candidates; no tuning after test.",
+  "limitations": [
+    "Hand-authored templates and fictional fields, not real policies or real query distribution.",
+    "Disjoint composite team identities, but shared topic ontology and city/department tokens.",
+    "Exactly one strict-scope relevant document per query; no real-world transfer demonstrated.",
+    "One training seed,100 test queries. Not evidence for original lost experiment."
+  ],
+  "model_files_sha256": {
+    "bge-base-zh-v1.5/pytorch_model.bin": "731cf5d88ed555a21ff2f2d9fa4db43b10489173ddd9178db3eecfd7a2bae044",
+    "synthetic-v1-b64/model/model.safetensors": "f6854b5ccb9b6ed3eed5813c989a899649ebf62d8b6dbe58227cb2e6df937927"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "dataset": "C-MTEB/T2Reranking",
+  "source_split": "dev",
+  "revision": "76631901a18387f85eaa53e5450019b87ad58ef9",
+  "source_sha256": "ceaf1ba1a4777dbb7aecad86fb8aa9cae7a678af6d711d5529c238e89bb6adff",
+  "seed": 42,
+  "source_url": "https://huggingface.co/datasets/C-MTEB/T2Reranking/tree/76631901a18387f85eaa53e5450019b87ad58ef9",
+  "train_pairs": 1200,
+  "queries_per_eval_split": 100,
+  "candidate_documents_per_eval_split": 1000,
+  "files": {
+    "test": {
+      "rows": 831,
+      "sha256": "46a8cd8e17a5a5bf16e4951da9c6519e2a73ae148e6e05dd0664511bb1086d8a"
+    },
+    "test_corpus": {
+      "rows": 1000,
+      "sha256": "b7842524627aee90b6f9a9aa14c67aaeecd8148e8c1d2cbe04ee4f9719272faf"
+    },
+    "dev": {
+      "rows": 708,
+      "sha256": "296c8722d2c5733cdddec1fc792fcfc366cf05938e6f56f77d1f09dfae13a08c"
+    },
+    "dev_corpus": {
+      "rows": 1000,
+      "sha256": "48dbc2113a3184ad4b4661958314feafb975d05a58c32cb6b1c56354a8ef7511"
+    },
+    "train": {
+      "rows": 1200,
+      "sha256": "a10c10accba403ce6fbe3b486303b1e654bb5fa045cb8790af6074a8ed62a8fb"
+    }
+  },
+  "explicit_training_negatives": true,
+  "selection": "Shuffle unique queries; first test, then dev, then eligible training queries. All known positives retained; fill corpora with original judged negatives. Training excludes held-out corpus text and known cross-query positive collisions. Optional training negatives use original order, excluding all known training positives and held-out corpus text; no model-based mining.",
+  "limitations": "Custom public dev split; base pretraining overlap and semantic near-duplicates not excluded; relevance labels may be incomplete; not an official benchmark."
+}

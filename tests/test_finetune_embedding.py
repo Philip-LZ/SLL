@@ -1,17 +1,19 @@
+import contextlib
 import json
 import os
 import tempfile
 import unittest
 from pathlib import Path
 
-from backend import finetune_embedding
-from backend.finetune_embedding import load_pairs, parse_args, prepare_data, retrieval_data
+from backend.tools import finetune_embedding
+from backend.tools.finetune_embedding import load_pairs, parse_args, prepare_data, retrieval_data
 
 
 class FineTuneEmbeddingDataTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
+        self.enterContext(contextlib.chdir(self.temp.name))
         self.path = Path(self.temp.name) / "pairs.jsonl"
 
     def write_rows(self, rows):
@@ -76,9 +78,9 @@ class FineTuneEmbeddingDataTests(unittest.TestCase):
         train, evaluation = prepare_data(args)
         self.assertEqual(train, self.valid_rows())
         self.assertIsNone(evaluation)
-        self.assertEqual(args.model, "nomic-ai/nomic-embed-text-v1.5")
-        self.assertEqual(args.query_prefix, "search_query: ")
-        self.assertEqual(args.document_prefix, "search_document: ")
+        self.assertEqual(args.model, "BAAI/bge-base-zh-v1.5")
+        self.assertEqual(args.query_prefix, "为这个句子生成表示以用于检索相关文章：")
+        self.assertEqual(args.document_prefix, "")
         self.assertEqual(args.batch_size, 16)
         self.assertEqual(args.epochs, 1)
         self.assertEqual(args.learning_rate, 2e-5)
@@ -166,7 +168,7 @@ class FineTuneEmbeddingSmokeTests(unittest.TestCase):
         BertTokenizer(vocab_file=str(encoder / "vocab.txt")).save_pretrained(str(encoder))
         BertModel(BertConfig(vocab_size=16, hidden_size=16, num_hidden_layers=1,
                              num_attention_heads=2, intermediate_size=32)).save_pretrained(str(encoder))
-        base = SentenceTransformer(modules=[Transformer(str(encoder), max_seq_length=16), Pooling(16)])
+        base = SentenceTransformer(modules=[Transformer(str(encoder), max_seq_length=16), Pooling(16)], device="cpu")
         self.before = {name: value.detach().clone() for name, value in base.named_parameters()}
         self.model_path = self.root / "base"
         base.save_pretrained(str(self.model_path))
@@ -188,6 +190,14 @@ class FineTuneEmbeddingSmokeTests(unittest.TestCase):
         import torch
         from sentence_transformers import SentenceTransformer
 
+        rows = finetune_embedding.load_pairs(self.train_path)
+        for i, row in enumerate(rows):
+            row["negative"] = f"n{i}"
+        self.train_path.write_text("\n".join(json.dumps(row) for row in rows))
+        self.args.gradient_checkpointing = True
+        corpus_path = self.root / "corpus.jsonl"
+        corpus_path.write_text('\n'.join(json.dumps({"text": text}) for text in ["d1", "d5", "noise"]))
+        self.args.corpus = str(corpus_path)
         result = finetune_embedding.train(self.args)
         trained = SentenceTransformer(str(result), device="cpu")
         self.assertTrue(any(not torch.equal(self.before[name], value)
@@ -197,7 +207,7 @@ class FineTuneEmbeddingSmokeTests(unittest.TestCase):
         self.assertTrue(np.isfinite(vectors).all())
         metrics = json.loads((Path(self.args.output) / "metrics.json").read_text())
         self.assertEqual(set(metrics), {"before", "after", "queries", "documents"})
-        self.assertEqual((metrics["queries"], metrics["documents"]), (2, 2))
+        self.assertEqual((metrics["queries"], metrics["documents"]), (2, 3))
         self.assertEqual(set(metrics["before"]), {"recall@1", "recall@5", "recall@10", "mrr@10"})
         self.assertTrue((Path(self.args.output) / "run_config.json").is_file())
 

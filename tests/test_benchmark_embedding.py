@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from backend.benchmark_embedding import load_inputs, summarize
+from backend.tools.benchmark_embedding import load_inputs, summarize
 
 
 class BenchmarkInputTests(unittest.TestCase):
